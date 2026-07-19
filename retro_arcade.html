@@ -2733,7 +2733,7 @@ function triggerKey(key, type) {
   }
 }
 
-document.querySelectorAll('.gamepad-btn, .pill-btn').forEach(btn => {
+document.querySelectorAll('.pill-btn, .action-btn').forEach(btn => {
   btn.addEventListener('touchstart', (e) => {
     e.preventDefault();
     btn.classList.add('active');
@@ -2749,6 +2749,65 @@ document.querySelectorAll('.gamepad-btn, .pill-btn').forEach(btn => {
     btn.classList.remove('active');
     triggerKey(btn.dataset.key, 'keyup');
   });
+});
+
+// Advanced D-Pad Logic (Swipe & Glide)
+const dpad = document.querySelector('.gamepad-dpad');
+let activeDpadKey = null;
+
+function handleDpadTouch(e) {
+  e.preventDefault();
+  if (e.touches.length === 0) return;
+  const touch = e.touches[0];
+  const rect = dpad.getBoundingClientRect();
+  const x = touch.clientX - rect.left - rect.width/2;
+  const y = touch.clientY - rect.top - rect.height/2;
+  
+  // Deadzone in the center
+  if (Math.abs(x) < 20 && Math.abs(y) < 20) {
+    if (activeDpadKey) {
+      triggerKey(activeDpadKey, 'keyup');
+      document.querySelector(`.dpad-btn[data-key="${activeDpadKey}"]`)?.classList.remove('active');
+      activeDpadKey = null;
+    }
+    return;
+  }
+  
+  let newKey = null;
+  if (Math.abs(x) > Math.abs(y)) {
+    newKey = x > 0 ? 'ArrowRight' : 'ArrowLeft';
+  } else {
+    newKey = y > 0 ? 'ArrowDown' : 'ArrowUp';
+  }
+  
+  if (activeDpadKey !== newKey) {
+    if (activeDpadKey) {
+      triggerKey(activeDpadKey, 'keyup');
+      document.querySelector(`.dpad-btn[data-key="${activeDpadKey}"]`)?.classList.remove('active');
+    }
+    activeDpadKey = newKey;
+    triggerKey(activeDpadKey, 'keydown');
+    document.querySelector(`.dpad-btn[data-key="${activeDpadKey}"]`)?.classList.add('active');
+  }
+}
+
+dpad.addEventListener('touchstart', handleDpadTouch);
+dpad.addEventListener('touchmove', handleDpadTouch);
+dpad.addEventListener('touchend', (e) => {
+  e.preventDefault();
+  if (activeDpadKey) {
+    triggerKey(activeDpadKey, 'keyup');
+    document.querySelector(`.dpad-btn[data-key="${activeDpadKey}"]`)?.classList.remove('active');
+    activeDpadKey = null;
+  }
+});
+dpad.addEventListener('touchcancel', (e) => {
+  e.preventDefault();
+  if (activeDpadKey) {
+    triggerKey(activeDpadKey, 'keyup');
+    document.querySelector(`.dpad-btn[data-key="${activeDpadKey}"]`)?.classList.remove('active');
+    activeDpadKey = null;
+  }
 });
 
 // Show gamepad on mobile
