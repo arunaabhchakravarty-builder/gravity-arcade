@@ -99,6 +99,13 @@
       if (!event.data) return;
       
       if (event.data.type === 'gamepad') {
+        if (!window._gamepadConnectedFired) {
+          window._gamepadConnectedFired = true;
+          const e = new Event('gamepadconnected');
+          e.gamepad = mockGamepad;
+          window.dispatchEvent(e);
+        }
+        
         const { button, pressed } = event.data;
         if (button !== undefined && button >= 0 && button < 17) {
           virtualGamepadState.buttons[button] = pressed;
@@ -111,9 +118,14 @@
         }
       } else if (event.data.type === 'keyboard') {
         const { key, eventType, keyCode } = event.data;
+        let codeValue = key;
+        if (key.length === 1) codeValue = 'Key' + key.toUpperCase();
+        if (key === 'Enter') codeValue = 'Enter';
+        if (key === 'Shift') codeValue = 'ShiftLeft';
+
         const e = new KeyboardEvent(eventType, {
           key: key,
-          code: key,
+          code: codeValue,
           keyCode: keyCode,
           which: keyCode,
           bubbles: true,
