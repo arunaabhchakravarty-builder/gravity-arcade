@@ -2723,11 +2723,28 @@ function triggerGamepad(key, isPressed) {
       case 'ArrowLeft': buttonIndex = 14; break; // D-Pad Left
       case 'ArrowRight': buttonIndex = 15; break; // D-Pad Right
     }
+    
+    // 1. Send Gamepad API Event
     if (buttonIndex !== -1) {
       frame.contentWindow.postMessage({
         type: 'gamepad',
         button: buttonIndex,
         pressed: isPressed
+      }, '*');
+    }
+    
+    // 2. Send Keyboard API Event (Foolproof fallback)
+    const keyCodes = {
+      'x': 88, 'z': 90, 'a': 65, 's': 83,
+      'Shift': 16, 'Enter': 13,
+      'ArrowUp': 38, 'ArrowDown': 40, 'ArrowLeft': 37, 'ArrowRight': 39
+    };
+    if (keyCodes[key]) {
+      frame.contentWindow.postMessage({
+        type: 'keyboard',
+        key: key,
+        keyCode: keyCodes[key],
+        eventType: isPressed ? 'keydown' : 'keyup'
       }, '*');
     }
   }

@@ -96,7 +96,9 @@
     };
 
     window.addEventListener('message', (event) => {
-      if (event.data && event.data.type === 'gamepad') {
+      if (!event.data) return;
+      
+      if (event.data.type === 'gamepad') {
         const { button, pressed } = event.data;
         if (button !== undefined && button >= 0 && button < 17) {
           virtualGamepadState.buttons[button] = pressed;
@@ -107,6 +109,22 @@
           if (button === 14) virtualGamepadState.axes[0] = pressed ? -1.0 : (virtualGamepadState.buttons[15] ? 1.0 : 0.0); // Left
           if (button === 15) virtualGamepadState.axes[0] = pressed ? 1.0 : (virtualGamepadState.buttons[14] ? -1.0 : 0.0); // Right
         }
+      } else if (event.data.type === 'keyboard') {
+        const { key, eventType, keyCode } = event.data;
+        const e = new KeyboardEvent(eventType, {
+          key: key,
+          code: key,
+          keyCode: keyCode,
+          which: keyCode,
+          bubbles: true,
+          cancelable: true
+        });
+        document.dispatchEvent(e);
+        window.dispatchEvent(e);
+        
+        // Also dispatch to canvas if it exists
+        const canvas = document.querySelector('canvas');
+        if (canvas) canvas.dispatchEvent(new KeyboardEvent(eventType, { key, code: key, keyCode, which: keyCode, bubbles: true, cancelable: true }));
       }
     });
 
