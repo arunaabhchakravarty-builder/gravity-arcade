@@ -55,20 +55,15 @@
     };
     window.EJS_VirtualGamepadSettings = [];
     
-    // Inject CSS to forcefully hide any overlay buttons EmulatorJS generates
+    // Minimal CSS to only hide the specific virtual gamepad elements without breaking touch events
     const style = document.createElement('style');
-    style.innerHTML = `
-      .ejs-virtual-gamepad, #ejs-virtual-gamepad, .emulatorjs-gamepad, 
-      [id^="ejs-btn-"], [class*="gamepad"] {
+    style.innerHTML = \`
+      .ejs-virtual-gamepad, #ejs-virtual-gamepad, .emulatorjs-gamepad {
         display: none !important;
         opacity: 0 !important;
         pointer-events: none !important;
       }
-      /* Hide elements with high z-index that are positioned absolutely (typical for these buttons) */
-      #game > div > div {
-        background: transparent !important;
-      }
-    `;
+    \`;
     document.head.appendChild(style);
 
     // Set up proxy callbacks to parent
