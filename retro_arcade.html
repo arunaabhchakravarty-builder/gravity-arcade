@@ -2708,7 +2708,7 @@ function toggleFullscreen() {
 // Gamepad Touch Logic
 // Gamepad Touch Logic
 function triggerGamepad(key, isPressed) {
-  const frame = document.getElementById('emulatorFrame');
+  const frame = document.getElementById('emu-iframe');
   if (frame && frame.contentWindow) {
     let buttonIndex = -1;
     switch(key) {

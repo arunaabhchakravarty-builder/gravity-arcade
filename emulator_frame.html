@@ -74,9 +74,16 @@
       buttons: virtualGamepadState.buttons.map(p => ({ pressed: p, touched: p, value: p ? 1.0 : 0.0 }))
     };
 
-    const originalGetGamepads = navigator.getGamepads.bind(navigator);
+    const originalGetGamepads = navigator.getGamepads ? navigator.getGamepads.bind(navigator) : null;
     navigator.getGamepads = function() {
-      const realGamepads = originalGetGamepads();
+      let realGamepads = null;
+      if (originalGetGamepads) {
+        try {
+          realGamepads = originalGetGamepads();
+        } catch (e) {
+          console.warn("Could not get native gamepads:", e);
+        }
+      }
       // If a real gamepad is connected, use it. Otherwise, return our virtual one.
       if (realGamepads && realGamepads[0] && realGamepads[0].connected) {
         return realGamepads;
