@@ -58,6 +58,45 @@
     window.EJS_disableVirtualGamepad = true;
     window.EJS_disableGamepad = true;
     
+    // MOCK GAMEPAD API FOR VIRTUAL CONTROLLER
+    const virtualGamepadState = {
+      buttons: new Array(17).fill(false),
+      axes: [0, 0, 0, 0]
+    };
+    
+    const mockGamepad = {
+      id: "Gravity Arcade Virtual Gamepad",
+      index: 0,
+      connected: true,
+      timestamp: 0,
+      mapping: "standard",
+      axes: virtualGamepadState.axes,
+      buttons: virtualGamepadState.buttons.map(p => ({ pressed: p, touched: p, value: p ? 1.0 : 0.0 }))
+    };
+
+    const originalGetGamepads = navigator.getGamepads.bind(navigator);
+    navigator.getGamepads = function() {
+      const realGamepads = originalGetGamepads();
+      // If a real gamepad is connected, use it. Otherwise, return our virtual one.
+      if (realGamepads && realGamepads[0] && realGamepads[0].connected) {
+        return realGamepads;
+      }
+      
+      mockGamepad.timestamp = performance.now();
+      mockGamepad.buttons = virtualGamepadState.buttons.map(p => ({ pressed: p, touched: p, value: p ? 1.0 : 0.0 }));
+      mockGamepad.axes = [...virtualGamepadState.axes];
+      return [mockGamepad, null, null, null];
+    };
+
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'gamepad') {
+        const { button, pressed } = event.data;
+        if (button !== undefined && button >= 0 && button < 17) {
+          virtualGamepadState.buttons[button] = pressed;
+        }
+      }
+    });
+
     // Minimal CSS to only hide the specific virtual gamepad elements without breaking touch events
     const style = document.createElement('style');
     style.innerHTML = `

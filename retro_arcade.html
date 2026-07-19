@@ -2706,30 +2706,30 @@ function toggleFullscreen() {
 }
 
 // Gamepad Touch Logic
-function triggerKey(key, type) {
+// Gamepad Touch Logic
+function triggerGamepad(key, isPressed) {
   const frame = document.getElementById('emulatorFrame');
   if (frame && frame.contentWindow) {
-    const keyCodeValue = key === 'Enter' ? 13 : key === 'Shift' ? 16 : key === 'ArrowUp' ? 38 : key === 'ArrowDown' ? 40 : key === 'ArrowLeft' ? 37 : key === 'ArrowRight' ? 39 : key === 'z' ? 90 : key === 'x' ? 88 : key === 'a' ? 65 : key === 's' ? 83 : 0;
-    
-    const eventDict = {
-      key: key,
-      code: key === 'Enter' ? 'Enter' : key === 'Shift' ? 'ShiftLeft' : key.startsWith('Arrow') ? key : 'Key' + key.toUpperCase(),
-      keyCode: keyCodeValue,
-      which: keyCodeValue,
-      bubbles: true,
-      cancelable: true,
-      composed: true,
-      view: frame.contentWindow
-    };
-    
-    // Dispatch to document, window, and canvas to ensure Emscripten catches it
-    const doc = frame.contentWindow.document;
-    const canvas = doc.querySelector('canvas');
-    const win = frame.contentWindow;
-    
-    doc.dispatchEvent(new KeyboardEvent(type, eventDict));
-    win.dispatchEvent(new KeyboardEvent(type, eventDict));
-    if (canvas) canvas.dispatchEvent(new KeyboardEvent(type, eventDict));
+    let buttonIndex = -1;
+    switch(key) {
+      case 'x': buttonIndex = 1; break; // A (Right face button)
+      case 'z': buttonIndex = 0; break; // B (Bottom face button)
+      case 'a': buttonIndex = 2; break; // Y (Left face button)
+      case 's': buttonIndex = 3; break; // X (Top face button)
+      case 'Shift': buttonIndex = 8; break; // Select
+      case 'Enter': buttonIndex = 9; break; // Start
+      case 'ArrowUp': buttonIndex = 12; break; // D-Pad Up
+      case 'ArrowDown': buttonIndex = 13; break; // D-Pad Down
+      case 'ArrowLeft': buttonIndex = 14; break; // D-Pad Left
+      case 'ArrowRight': buttonIndex = 15; break; // D-Pad Right
+    }
+    if (buttonIndex !== -1) {
+      frame.contentWindow.postMessage({
+        type: 'gamepad',
+        button: buttonIndex,
+        pressed: isPressed
+      }, '*');
+    }
   }
 }
 
@@ -2737,17 +2737,17 @@ document.querySelectorAll('.pill-btn, .action-btn').forEach(btn => {
   btn.addEventListener('touchstart', (e) => {
     e.preventDefault();
     btn.classList.add('active');
-    triggerKey(btn.dataset.key, 'keydown');
+    triggerGamepad(btn.dataset.key, true);
   });
   btn.addEventListener('touchend', (e) => {
     e.preventDefault();
     btn.classList.remove('active');
-    triggerKey(btn.dataset.key, 'keyup');
+    triggerGamepad(btn.dataset.key, false);
   });
   btn.addEventListener('touchcancel', (e) => {
     e.preventDefault();
     btn.classList.remove('active');
-    triggerKey(btn.dataset.key, 'keyup');
+    triggerGamepad(btn.dataset.key, false);
   });
 });
 
@@ -2766,7 +2766,7 @@ function handleDpadTouch(e) {
   // Deadzone in the center
   if (Math.abs(x) < 20 && Math.abs(y) < 20) {
     if (activeDpadKey) {
-      triggerKey(activeDpadKey, 'keyup');
+      triggerGamepad(activeDpadKey, false);
       document.querySelector(`.dpad-btn[data-key="${activeDpadKey}"]`)?.classList.remove('active');
       activeDpadKey = null;
     }
@@ -2782,11 +2782,11 @@ function handleDpadTouch(e) {
   
   if (activeDpadKey !== newKey) {
     if (activeDpadKey) {
-      triggerKey(activeDpadKey, 'keyup');
+      triggerGamepad(activeDpadKey, false);
       document.querySelector(`.dpad-btn[data-key="${activeDpadKey}"]`)?.classList.remove('active');
     }
     activeDpadKey = newKey;
-    triggerKey(activeDpadKey, 'keydown');
+    triggerGamepad(activeDpadKey, true);
     document.querySelector(`.dpad-btn[data-key="${activeDpadKey}"]`)?.classList.add('active');
   }
 }
@@ -2796,7 +2796,7 @@ dpad.addEventListener('touchmove', handleDpadTouch);
 dpad.addEventListener('touchend', (e) => {
   e.preventDefault();
   if (activeDpadKey) {
-    triggerKey(activeDpadKey, 'keyup');
+    triggerGamepad(activeDpadKey, false);
     document.querySelector(`.dpad-btn[data-key="${activeDpadKey}"]`)?.classList.remove('active');
     activeDpadKey = null;
   }
@@ -2804,7 +2804,7 @@ dpad.addEventListener('touchend', (e) => {
 dpad.addEventListener('touchcancel', (e) => {
   e.preventDefault();
   if (activeDpadKey) {
-    triggerKey(activeDpadKey, 'keyup');
+    triggerGamepad(activeDpadKey, false);
     document.querySelector(`.dpad-btn[data-key="${activeDpadKey}"]`)?.classList.remove('active');
     activeDpadKey = null;
   }
