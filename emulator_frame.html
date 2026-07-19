@@ -100,6 +100,12 @@
         const { button, pressed } = event.data;
         if (button !== undefined && button >= 0 && button < 17) {
           virtualGamepadState.buttons[button] = pressed;
+          
+          // Map D-pad buttons (12-15) to Analog Stick Axes (0, 1) as some emulators ignore D-pad buttons
+          if (button === 12) virtualGamepadState.axes[1] = pressed ? -1.0 : (virtualGamepadState.buttons[13] ? 1.0 : 0.0); // Up
+          if (button === 13) virtualGamepadState.axes[1] = pressed ? 1.0 : (virtualGamepadState.buttons[12] ? -1.0 : 0.0); // Down
+          if (button === 14) virtualGamepadState.axes[0] = pressed ? -1.0 : (virtualGamepadState.buttons[15] ? 1.0 : 0.0); // Left
+          if (button === 15) virtualGamepadState.axes[0] = pressed ? 1.0 : (virtualGamepadState.buttons[14] ? -1.0 : 0.0); // Right
         }
       }
     });
