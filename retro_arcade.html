@@ -1,0 +1,2789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🕹️ Gravity Arcade — Standalone Retro Emulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Quicksand:wght@500;600;700;900&family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="themes.css" rel="stylesheet">
+<link href="sidebar.css" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text-main);
+  font-family: 'Quicksand', -apple-system, sans-serif;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  display: flex;
+  transition: background 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.dashboard {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* TOP HEADER */
+.dash-hdr {
+  height: 64px;
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  z-index: 20;
+  box-shadow: var(--shadow-sm);
+}
+
+.hdr-title-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.hdr-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 16px;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 1px;
+}
+
+.hdr-sub {
+  font-size: 11px;
+  color: var(--text-sub);
+  font-weight: 600;
+}
+
+.hdr-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid var(--border);
+  background: var(--card-hover);
+  color: var(--text-main);
+  font-family: 'Quicksand', sans-serif;
+}
+
+.btn:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border: none;
+  color: #fff;
+  box-shadow: 0 4px 16px var(--primary-glow);
+}
+
+.btn-primary:hover {
+  filter: brightness(1.15);
+  color: #fff;
+  box-shadow: 0 6px 24px var(--primary-glow);
+}
+
+/* ARCADE LAYOUT */
+.dash-canvas {
+  flex: 1;
+  overflow: hidden;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 320px 1fr 300px;
+  gap: 24px;
+}
+
+.arcade-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.card-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* LEFT COLUMN: LIBRARY & LOADER */
+.dropzone {
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  padding: 12px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  flex-direction: row;
+  justify-content: center;
+}
+
+.dropzone:hover, .dropzone.dragover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  box-shadow: inset 0 0 10px var(--primary-glow);
+}
+
+.dropzone-icon {
+  font-size: 20px;
+  filter: drop-shadow(0 0 8px var(--primary-glow));
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.dropzone-text {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.dropzone-sub {
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+.url-loader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-sub);
+  letter-spacing: 0.5px;
+}
+
+.input-field {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-main);
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.input-field:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* CURATED LIST */
+.game-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.game-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--card-hover);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.game-item:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  transform: translateX(4px);
+}
+
+.game-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.game-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.game-system {
+  font-size: 9px;
+  font-family: 'Orbitron', sans-serif;
+  color: var(--primary);
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.game-play-btn {
+  font-size: 14px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.game-item:hover .game-play-btn {
+  opacity: 1;
+}
+
+/* CENTER COLUMN: THE ARCADE CRT TV */
+.card-cabinet {
+  background: linear-gradient(135deg, #2b2b2b 0%, #111 100%);
+  border: 2px solid #000;
+  border-radius: 24px;
+  box-shadow: 
+    inset 0px 4px 10px rgba(255, 255, 255, 0.1),
+    inset 0px -6px 15px rgba(0, 0, 0, 0.8),
+    0 15px 35px rgba(0, 0, 0, 0.6),
+    0 0 0 6px #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  padding: 30px 40px 10px 40px;
+  position: relative;
+}
+
+/* TV Speaker Grille (Left Side) */
+.card-cabinet::before {
+  content: '';
+  position: absolute;
+  bottom: 25px;
+  left: 40px;
+  width: 80px;
+  height: 30px;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 3px,
+    rgba(0,0,0,0.8) 3px,
+    rgba(0,0,0,0.8) 6px
+  );
+  border-radius: 4px;
+}
+
+/* TV Vents (Top) */
+.card-cabinet::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 8px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(0,0,0,0.8),
+    rgba(0,0,0,0.8) 4px,
+    transparent 4px,
+    transparent 8px
+  );
+  border-radius: 2px;
+}
+
+.cabinet-bezel {
+  flex: 1;
+  background: #050505;
+  border: 18px solid #0a0a0a;
+  border-radius: 40px; /* Curved CRT glass corners */
+  box-shadow: 
+    inset 0 0 40px rgba(0, 0, 0, 0.9),
+    inset 0 0 10px rgba(255,255,255,0.05),
+    0 0 0 2px #111,
+    0 0 0 8px #080808;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* CRT SCANLINE EFFECTS */
+.crt-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  transition: opacity 0.3s;
+  opacity: 0.8;
+}
+
+.crt-scanlines {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  );
+  background-size: 100% 4px;
+}
+
+.crt-flicker {
+  position: absolute;
+  inset: 0;
+  background: rgba(18, 16, 16, 0.05);
+  opacity: 0.95;
+  animation: flicker 0.15s infinite;
+}
+
+.crt-scroller {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 0%,
+    rgba(255, 255, 255, 0.03) 10%,
+    rgba(18, 16, 16, 0) 20%
+  );
+  animation: scroll-line 6s linear infinite;
+}
+
+.crt-vignette {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8);
+}
+
+.crt-curve {
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.03);
+  background: radial-gradient(circle at center, transparent 60%, rgba(0,0,0,0.5) 100%);
+}
+
+@keyframes flicker {
+  0% { opacity: 0.97; }
+  50% { opacity: 1.0; }
+  100% { opacity: 0.98; }
+}
+
+@keyframes scroll-line {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(100%); }
+}
+
+#game-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  position: relative;
+  z-index: 2;
+}
+
+.cabinet-controls {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px 0 140px; /* Push past the speaker grille */
+  margin-top: 10px;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  color: var(--text-sub);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.status-dot.active {
+  background: var(--success);
+  box-shadow: 0 0 10px var(--success);
+  animation: pulse-dot 1.5s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.6; }
+}
+
+/* RIGHT COLUMN: GAME GENIE CODE FINDER */
+.gg-dropdown-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gg-select {
+  width: 100%;
+  padding: 9px 12px;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-main);
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  outline: none;
+  transition: all 0.2s;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+.gg-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.gg-select option {
+  background: #1a1f2c;
+  color: #e2e8f0;
+  padding: 6px;
+}
+
+/* Add New Codes collapsible section */
+.gg-add-section {
+  display: block !important;
+  width: 100% !important;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.gg-add-section[open] {
+  border-color: var(--primary);
+  box-shadow: 0 0 12px var(--primary-glow);
+}
+
+.gg-add-toggle {
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-main) !important;
+  cursor: pointer;
+  list-style: none;
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  background: var(--card-hover);
+  user-select: none;
+  min-height: 38px;
+}
+
+.gg-add-toggle::-webkit-details-marker { display: none; }
+
+.gg-add-toggle:hover {
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+.gg-add-body {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+}
+
+.gg-paste-area {
+  width: 100%;
+  min-height: 80px;
+  max-height: 160px;
+  padding: 10px 12px;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-main);
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  line-height: 1.6;
+  outline: none;
+  resize: vertical;
+  transition: all 0.2s;
+}
+
+.gg-paste-area:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.gg-paste-area::placeholder {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.gg-results {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gg-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--card-hover);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.18s;
+  position: relative;
+  overflow: hidden;
+}
+
+.gg-entry::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--primary), var(--secondary));
+}
+
+.gg-entry:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  transform: translateX(2px);
+}
+
+.gg-code-box {
+  font-family: 'Fira Code', monospace;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--primary);
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 3px 7px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.gg-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.gg-effect {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--text-main);
+  white-space: normal !important;
+  line-height: 1.3 !important;
+  overflow: visible !important;
+}
+
+.gg-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.gg-badge {
+  font-size: 7.5px;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.gg-badge.inv  { background:rgba(251,191,36,.15); color:#fbbf24; border:1px solid rgba(251,191,36,.3); }
+.gg-badge.lives{ background:rgba(239,68,68,.15);  color:#f87171; border:1px solid rgba(239,68,68,.3); }
+.gg-badge.wpn  { background:rgba(34,197,94,.15);  color:#4ade80; border:1px solid rgba(34,197,94,.3); }
+.gg-badge.skip { background:rgba(99,102,241,.15); color:#818cf8; border:1px solid rgba(99,102,241,.3); }
+.gg-badge.pwr  { background:rgba(244,63,94,.15);  color:#fb7185; border:1px solid rgba(244,63,94,.3); }
+.gg-badge.dbg  { background:rgba(168,85,247,.15); color:#c084fc; border:1px solid rgba(168,85,247,.3); }
+
+.gg-src {
+  font-size: 8.5px;
+  color: var(--text-muted);
+  font-family: 'Fira Code', monospace;
+}
+
+.gg-copy-flash {
+  position: absolute;
+  inset: 0;
+  background: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--primary);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s;
+  border-radius: 10px;
+}
+
+.gg-copy-flash.show { opacity: 1; }
+
+.gg-src-links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gg-src-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: var(--card-hover);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.18s;
+}
+
+.gg-src-link:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.gg-src-link-name {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-main);
+  flex: 1;
+}
+
+.gg-src-link-rating {
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+.gg-no-results {
+  text-align: center;
+  padding: 18px;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.helper-card {
+  background: rgba(244, 63, 94, 0.05);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-sub);
+}
+
+/* Hiding default menu bar of EmulatorJS to clean UI */
+.ejs_menu_bar {
+  opacity: 0.1;
+  transition: opacity 0.3s;
+}
+.ejs_menu_bar:hover {
+  opacity: 1;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 16px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 40px;
+}
+
+.empty-icon {
+  font-size: 54px;
+  filter: drop-shadow(0 0 12px var(--primary-glow));
+}
+
+.empty-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 16px;
+  font-weight: 900;
+  color: #f8fafc;
+}
+
+.empty-desc {
+  font-size: 12px;
+  max-width: 260px;
+  color: #cbd5e1;
+}
+
+/* AUDIO AUTOPLAY ENABLE OVERLAY */
+.audio-autoplay-overlay {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(0);
+  background: rgba(2, 4, 10, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 10px 20px;
+  border-radius: 30px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 
+    0 10px 30px rgba(0,0,0,0.6),
+    0 0 20px var(--primary-glow);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: floatUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.audio-autoplay-overlay:hover {
+  background: rgba(2, 4, 10, 0.95);
+  border-color: var(--primary);
+  transform: translateX(-50%) translateY(-2px);
+  box-shadow: 
+    0 12px 36px rgba(0,0,0,0.7),
+    0 0 30px var(--primary-glow);
+}
+
+.audio-autoplay-text {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-main);
+  font-family: 'Quicksand', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+.audio-autoplay-icon {
+  font-size: 14px;
+  animation: pulseAudio 1.5s infinite;
+}
+
+@keyframes floatUp {
+  from { transform: translateX(-50%) translateY(30px); opacity: 0; }
+  to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+@keyframes pulseAudio {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+/* RESUME SESSION OVERLAY */
+.resume-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  background: rgba(10, 12, 22, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 440px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 30px var(--primary-glow);
+  text-align: center;
+  animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--text-main);
+  z-index: 10;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.resume-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  margin-bottom: 16px;
+  color: #38bdf8;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+
+.resume-game-card {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.resume-game-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.resume-game-meta {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  font-size: 10px;
+  font-family: 'Fira Code', monospace;
+  color: var(--text-muted);
+}
+
+.resume-game-sys {
+  font-family: 'Orbitron', sans-serif;
+  color: var(--primary);
+  font-weight: 800;
+  padding: 2px 6px;
+  background: var(--primary-light);
+  border: 1px solid rgba(var(--primary-rgb), 0.3);
+  border-radius: 4px;
+}
+
+.resume-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.resume-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  font-size: 13px;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  letter-spacing: 1px;
+  border-radius: 10px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+}
+
+.resume-btn-primary {
+  background: linear-gradient(135deg, #10b981, var(--primary));
+  color: #fff;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+.resume-btn-primary:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.5);
+}
+
+.resume-btn-secondary {
+  background: var(--card-hover);
+  border: 1px solid var(--border);
+  color: var(--text-sub);
+}
+
+.resume-btn-secondary:hover {
+  background: var(--border);
+  color: var(--text-main);
+}
+
+/* ─── LIGHT THEME CONTRAST OVERRIDES ─────────────────────────────────────── */
+:root[data-theme="sovereign"] .card-cabinet,
+:root[data-theme="holographic"] .card-cabinet,
+:root[data-theme="neobrutalism"] .card-cabinet {
+  background: #02040a !important; /* Force dark bezel background matching physical cabinet */
+  border-color: #1a1f2c !important;
+}
+:root[data-theme="sovereign"] .cabinet-bezel,
+:root[data-theme="holographic"] .cabinet-bezel,
+:root[data-theme="neobrutalism"] .cabinet-bezel {
+  background: #0d0f17 !important;
+  border-color: #161a24 !important;
+}
+:root[data-theme="sovereign"] .status-indicator,
+:root[data-theme="holographic"] .status-indicator,
+:root[data-theme="neobrutalism"] .status-indicator {
+  color: #94a3b8 !important; /* Force light gray text on dark bezel */
+}
+:root[data-theme="sovereign"] .cabinet-controls span,
+:root[data-theme="holographic"] .cabinet-controls span,
+:root[data-theme="neobrutalism"] .cabinet-controls span {
+  color: #94a3b8 !important; /* Force cabinet details to stay light */
+}
+:root[data-theme="sovereign"] .cabinet-controls #cabinetActiveSystem,
+:root[data-theme="holographic"] .cabinet-controls #cabinetActiveSystem,
+:root[data-theme="neobrutalism"] .cabinet-controls #cabinetActiveSystem {
+  color: var(--primary) !important;
+}
+
+/* Dropzone overrides */
+:root[data-theme="sovereign"] .dropzone,
+:root[data-theme="holographic"] .dropzone {
+  background: rgba(255, 255, 255, 0.45) !important;
+  border-color: var(--border) !important;
+}
+:root[data-theme="neobrutalism"] .dropzone {
+  background: #ffffff !important;
+  border: 2px dashed #000000 !important;
+}
+
+/* Inputs styling overrides */
+:root[data-theme="sovereign"] .input-field,
+:root[data-theme="sovereign"] .gg-input,
+:root[data-theme="holographic"] .input-field,
+:root[data-theme="holographic"] .gg-input {
+  background: rgba(255, 255, 255, 0.6) !important;
+  color: var(--text-main) !important;
+  border-color: var(--border) !important;
+}
+:root[data-theme="neobrutalism"] .input-field,
+:root[data-theme="neobrutalism"] .gg-input {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #000000 !important;
+  box-shadow: 2px 2px 0px #000000 !important;
+}
+
+/* Game Genie Badge colors (high contrast for light themes) */
+:root[data-theme="sovereign"] .gg-badge.inv,
+:root[data-theme="holographic"] .gg-badge.inv,
+:root[data-theme="neobrutalism"] .gg-badge.inv {
+  background: rgba(180, 83, 9, 0.15) !important; /* amber-700 */
+  color: #b45309 !important;
+  border: 1px solid rgba(180, 83, 9, 0.3) !important;
+}
+:root[data-theme="sovereign"] .gg-badge.lives,
+:root[data-theme="holographic"] .gg-badge.lives,
+:root[data-theme="neobrutalism"] .gg-badge.lives {
+  background: rgba(185, 28, 28, 0.15) !important; /* red-700 */
+  color: #b91c1c !important;
+  border: 1px solid rgba(185, 28, 28, 0.3) !important;
+}
+:root[data-theme="sovereign"] .gg-badge.wpn,
+:root[data-theme="holographic"] .gg-badge.wpn,
+:root[data-theme="neobrutalism"] .gg-badge.wpn {
+  background: rgba(4, 120, 87, 0.15) !important; /* emerald-700 */
+  color: #047857 !important;
+  border: 1px solid rgba(4, 120, 87, 0.3) !important;
+}
+:root[data-theme="sovereign"] .gg-badge.skip,
+:root[data-theme="holographic"] .gg-badge.skip,
+:root[data-theme="neobrutalism"] .gg-badge.skip {
+  background: rgba(67, 56, 202, 0.15) !important; /* indigo-700 */
+  color: #4338ca !important;
+  border: 1px solid rgba(67, 56, 202, 0.3) !important;
+}
+:root[data-theme="sovereign"] .gg-badge.pwr,
+:root[data-theme="holographic"] .gg-badge.pwr,
+:root[data-theme="neobrutalism"] .gg-badge.pwr {
+  background: rgba(190, 24, 74, 0.15) !important; /* rose-700 */
+  color: #be1848 !important;
+  border: 1px solid rgba(190, 24, 74, 0.3) !important;
+}
+:root[data-theme="sovereign"] .gg-badge.dbg,
+:root[data-theme="holographic"] .gg-badge.dbg,
+:root[data-theme="neobrutalism"] .gg-badge.dbg {
+  background: rgba(109, 40, 217, 0.15) !important; /* violet-700 */
+  color: #6d28d9 !important;
+  border: 1px solid rgba(109, 40, 217, 0.3) !important;
+}
+
+/* ─── 3D CARTRIDGE GRID STYLES ────────────────────────────────────────── */
+.rom-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 4px;
+}
+
+.cartridge-card {
+  background: #232836;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.cartridge-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  border-color: var(--primary);
+  box-shadow: 0 8px 20px var(--primary-glow);
+}
+
+/* Cartridge plastic ribbing detail at top */
+.cartridge-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 6px;
+  background: repeating-linear-gradient(90deg, #1b1e2a, #1b1e2a 2px, #2a2f42 2px, #2a2f42 4px);
+  opacity: 0.8;
+}
+
+/* Cartridge label/sticker style */
+.cartridge-label {
+  margin-top: 6px;
+  aspect-ratio: 1.2;
+  border-radius: 4px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.4);
+}
+
+/* Gloss/shine effect across the label */
+.cartridge-label::after {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%; right: -50%; bottom: -50%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.15) 30%, transparent 30%, transparent 100%);
+  transform: rotate(15deg);
+  transition: all 0.4s;
+  pointer-events: none;
+}
+
+.cartridge-card:hover .cartridge-label::after {
+  transform: rotate(15deg) translate(10%, 10%);
+}
+
+.cartridge-icon {
+  font-size: 24px;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
+}
+
+.cartridge-sys-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 8px;
+  font-weight: 900;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
+.cartridge-title {
+  margin-top: 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #f8fafc;
+  text-align: center;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 28px; /* Fixed height to keep alignment */
+}
+
+/* Platform badge neon coloring depending on core */
+.cartridge-card[data-system="nes"] .cartridge-sys-badge { border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; }
+.cartridge-card[data-system="snes"] .cartridge-sys-badge { border: 1px solid rgba(139, 92, 246, 0.4); color: #c084fc; }
+.cartridge-card[data-system="segaMD"] .cartridge-sys-badge { border: 1px solid rgba(59, 130, 246, 0.4); color: #60a5fa; }
+.cartridge-card[data-system="gba"] .cartridge-sys-badge { border: 1px solid rgba(245, 158, 11, 0.4); color: #fbbf24; }
+.cartridge-card[data-system="gbc"] .cartridge-sys-badge { border: 1px solid rgba(236, 72, 153, 0.4); color: #f472b6; }
+.cartridge-card[data-system="gb"] .cartridge-sys-badge { border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399; }
+.cartridge-card[data-system="n64"] .cartridge-sys-badge { border: 1px solid rgba(255, 255, 255, 0.4); color: #e2e8f0; }
+.cartridge-card[data-system="nds"] .cartridge-sys-badge { border: 1px solid rgba(250, 204, 21, 0.4); color: #facc15; }
+
+/* Responsive Mobile Layout */
+@media (max-width: 1024px) {
+  body {
+    overflow: auto;
+    overflow-x: hidden;
+  }
+  .app-layout, .dashboard {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+  .dash-canvas {
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+    padding: 16px;
+    gap: 16px;
+  }
+  .dash-canvas .card-cabinet {
+    min-height: auto;
+    order: -1;
+    padding: 15px !important;
+  }
+  .dash-canvas .cabinet-bezel {
+    min-height: 280px; /* Prevent the emulator screen from squishing on mobile */
+  }
+  .card-cabinet::before, .card-cabinet::after {
+    display: none !important;
+  }
+  .cabinet-controls {
+    padding: 15px 0 0 0 !important;
+    justify-content: center !important;
+    flex-wrap: wrap; /* Prevent text overlap */
+    gap: 10px;
+    height: auto !important;
+  }
+  
+  /* Mobile Gamepad Styles */
+  .mobile-gamepad {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin-top: 15px;
+    background: rgba(10, 15, 25, 0.7);
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.3);
+  }
+  .gamepad-dpad, .gamepad-actions {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    flex-shrink: 0;
+  }
+  .gamepad-btn {
+    position: absolute;
+    background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(0,0,0,0.4));
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: all 0.05s ease;
+  }
+  .gamepad-btn.active {
+    background: var(--primary);
+    box-shadow: 0 0 15px var(--primary-glow);
+    transform: scale(0.95);
+    color: #000;
+  }
+  .dpad-btn { width: 36px; height: 36px; }
+  .dpad-btn.up { top: 0; left: 37px; border-radius: 8px 8px 4px 4px; border-bottom: none; }
+  .dpad-btn.down { bottom: 0; left: 37px; border-radius: 4px 4px 8px 8px; border-top: none; }
+  .dpad-btn.left { top: 37px; left: 0; border-radius: 8px 4px 4px 8px; border-right: none; }
+  .dpad-btn.right { top: 37px; right: 0; border-radius: 4px 8px 8px 4px; border-left: none; }
+  .dpad-center {
+    position: absolute;
+    width: 36px; height: 36px;
+    top: 37px; left: 37px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.2));
+    pointer-events: none;
+  }
+  
+  .gamepad-center {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex-shrink: 0;
+  }
+  .pill-btn {
+    position: relative;
+    width: 55px; height: 22px;
+    border-radius: 20px;
+    font-size: 8px;
+    font-weight: 800;
+    color: var(--text-muted);
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 1px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+  .pill-btn.active {
+    background: var(--primary);
+    color: #000;
+    box-shadow: 0 0 10px var(--primary-glow);
+  }
+  
+  .action-btn {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    font-weight: 900;
+    font-size: 14px;
+    color: #e2e8f0;
+    font-family: 'Quicksand', sans-serif;
+  }
+  .action-btn.x-btn { top: 0; left: 35px; }
+  .action-btn.y-btn { top: 35px; left: 0; }
+  .action-btn.b-btn { bottom: 0; left: 35px; }
+  .action-btn.a-btn { top: 35px; right: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-layout">
+
+  <!-- APP HEADER BAR -->
+  <div class="app-header-bar" id="app-header-container"></div>
+  <script src="app_header.js?v=2"></script>
+
+  <!-- MAIN CONTAINER -->
+  <main class="dashboard">
+
+    <!-- HEADER -->
+    <header class="dash-hdr">
+      <div class="hdr-title-wrap">
+        <div class="hdr-title">🕹️ GRAVITY ARCADE</div>
+        <div class="hdr-sub">Standalone Retro Emulator Hub</div>
+      </div>
+      <div class="hdr-actions">
+        <button class="btn btn-primary" onclick="resetCabinet()">🔄 Reset Core</button>
+      </div>
+    </header>
+
+    <!-- CANVAS LAYOUT -->
+    <div class="dash-canvas">
+
+      <!-- LEFT: GAME SELECTOR -->
+      <div class="arcade-card card-library">
+        <div class="card-header">
+          <span>🎮</span>
+          <div class="card-title">ROM Lounge</div>
+        </div>
+        <div class="card-body">
+          <!-- Dropzone (compact) -->
+          <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+            <div class="dropzone-icon">💾</div>
+            <div>
+              <div class="dropzone-text">Load ROM</div>
+              <div class="dropzone-sub">Drag & Drop or Browse</div>
+            </div>
+            <input type="file" id="fileInput" style="display:none;" accept=".nes,.smc,.sfc,.gen,.md,.bin,.gb,.gbc,.gba,.z64,.n64,.nds" onchange="handleFileSelect(this)">
+          </div>
+
+          <hr style="border:none; border-top:1px dashed var(--border); margin:4px 0;">
+
+          <!-- Local Vault (Backend Sync) — MIDDLE -->
+          <div class="url-loader" style="flex:1;">
+            <div class="input-label" style="display:flex; justify-content:space-between; align-items:center;">
+              <span>🗄️ Local ROM Vault</span>
+              <div style="display:flex; gap:6px;">
+                <button class="btn btn-secondary" onclick="refreshLocalRoms()" style="padding:2px 6px; font-size:10px;">🔄 Refresh</button>
+                <button class="btn btn-secondary" onclick="toggleConfigModal()" style="padding:2px 6px; font-size:10px;">⚙️ Config</button>
+              </div>
+            </div>
+            <div class="game-list" id="localRomList">
+              <div class="helper-card" style="margin-top:4px;">
+                Configure your local ROM folder to sync games here.
+              </div>
+            </div>
+          </div>
+
+          <hr style="border:none; border-top:1px dashed var(--border); margin:4px 0;">
+
+          <!-- Vimm's Lair Search — BOTTOM -->
+          <div class="url-loader">
+            <div class="input-label" style="display:flex; justify-content:space-between;">
+              <span>🌐 Search Vimm's Lair</span>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <input type="text" id="vimmSearchInput" class="input-field" placeholder="e.g. Sonic, Mario..." onkeydown="if(event.key==='Enter') searchVimmsLair()">
+              <button class="btn btn-primary" onclick="searchVimmsLair()" style="padding: 8px 12px;">Go</button>
+            </div>
+            <div style="font-size:9px; color:var(--text-muted); margin-top:4px;">
+              Search the Vimm's Lair database. Download the ROM into your Local Vault folder to play.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CENTER: CABINET SCREEN -->
+      <div class="arcade-card card-cabinet">
+        <div class="cabinet-bezel">
+          <!-- CRT Screen Effects wrapper -->
+          <div class="crt-overlay" id="crtOverlay">
+            <div class="crt-scanlines"></div>
+            <div class="crt-flicker"></div>
+            <div class="crt-scroller"></div>
+            <div class="crt-vignette"></div>
+            <div class="crt-curve"></div>
+          </div>
+
+          <!-- Game Mount -->
+          <div id="game-container">
+            <div class="empty-state">
+              <div class="empty-icon">🕹️</div>
+              <div class="empty-title">Insert Coin</div>
+              <div class="empty-desc">Drag & drop a local ROM or select a quick demo game in the left sidebar to power up the screen!</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="mobile-gamepad" class="mobile-gamepad" style="display: none;">
+          <div class="gamepad-dpad">
+            <div class="dpad-center"></div>
+            <div class="gamepad-btn dpad-btn up" data-key="ArrowUp"></div>
+            <div class="gamepad-btn dpad-btn right" data-key="ArrowRight"></div>
+            <div class="gamepad-btn dpad-btn down" data-key="ArrowDown"></div>
+            <div class="gamepad-btn dpad-btn left" data-key="ArrowLeft"></div>
+          </div>
+          <div class="gamepad-center">
+            <div class="pill-btn select" data-key="Shift">SELECT</div>
+            <div class="pill-btn start" data-key="Enter">START</div>
+          </div>
+          <div class="gamepad-actions">
+            <div class="gamepad-btn action-btn x-btn" data-key="s">X</div>
+            <div class="gamepad-btn action-btn y-btn" data-key="a">Y</div>
+            <div class="gamepad-btn action-btn b-btn" data-key="z">B</div>
+            <div class="gamepad-btn action-btn a-btn" data-key="x">A</div>
+          </div>
+        </div>
+
+        <div class="cabinet-controls">
+          <div class="status-indicator">
+            <div class="status-dot" id="cabinetStatusDot"></div>
+            <span id="cabinetStatusText">CABINET OFFLINE</span>
+          </div>
+          <div style="font-family:'Fira Code',monospace; font-size:11px; color:var(--text-muted);">
+            SYSTEM: <span id="cabinetActiveSystem" style="color:var(--primary); font-weight:bold;">NONE</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: GAME GENIE CODES -->
+      <div class="arcade-card card-controls">
+        <div class="card-header">
+          <span>🔮</span>
+          <div class="card-title">Game Genie Codes</div>
+        </div>
+        <div class="card-body" style="gap:12px;">
+
+          <!-- Game Dropdown -->
+          <div class="gg-dropdown-wrap">
+            <div class="input-label" style="margin-bottom:4px;">Select Game</div>
+            <select id="ggGameSelect" class="gg-select" onchange="ggSelectFromDropdown(this.value)">
+            </select>
+          </div>
+
+          <!-- Results area -->
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <div class="input-label">Verified Codes <span id="ggCount" style="color:var(--primary); font-size:10px;"></span></div>
+              <div style="font-size:9px; color:var(--text-muted); font-family:'Fira Code',monospace;">Click to copy</div>
+            </div>
+            <div class="gg-results" id="ggResults"></div>
+          </div>
+
+          <div class="helper-card" style="font-size:10px; line-height:1.6;">
+            <strong>💡 Game Genie Format:</strong> Each code is <span style="font-family:'Fira Code',monospace; color:var(--primary);">XXXX-XXXX</span> format. Click any code to copy it. Enter in your emulator's cheat menu before loading.
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+</div>
+
+<script>
+// ─── THEME SWITCHING ENGINE ──────────────────────────────────────────────────
+function switchTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('gravity_theme', theme);
+}
+
+// Load theme on start
+const validThemes = ['cyber', 'sovereign', 'holographic', 'nord', 'emerald', 'neobrutalism', 'tailadmin'];
+let savedTheme = localStorage.getItem('gravity_theme') || 'cyber';
+if (!validThemes.includes(savedTheme)) {
+  savedTheme = 'cyber';
+}
+document.documentElement.setAttribute('data-theme', savedTheme);
+
+let activeCore = null;
+let activeGameUrl = null;
+let activeBlob = null;
+let isCrtEnabled = true;
+let isEjsCrashed = false;
+
+// Drag and drop listeners
+const dropzone = document.getElementById('dropzone');
+dropzone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  dropzone.classList.add('dragover');
+});
+dropzone.addEventListener('dragleave', () => {
+  dropzone.classList.remove('dragover');
+});
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropzone.classList.remove('dragover');
+  if (e.dataTransfer.files.length > 0) {
+    handleFile(e.dataTransfer.files[0]);
+  }
+});
+
+function handleFileSelect(input) {
+  if (input.files.length > 0) {
+    handleFile(input.files[0]);
+  }
+}
+
+function detectCoreByExtension(filename) {
+  const ext = filename.split('.').pop().toLowerCase();
+  switch (ext) {
+    case 'nes': return 'nes';
+    case 'smc':
+    case 'sfc': return 'snes';
+    case 'gen':
+    case 'md':
+    case 'bin': return 'segaMD';
+    case 'gb': return 'gb';
+    case 'gbc': return 'gbc';
+    case 'gba': return 'gba';
+    case 'z64':
+    case 'n64':
+    case 'v64': return 'n64';
+    case 'nds': return 'nds';
+    case 'cue':
+    case 'iso':
+    case 'chd': return 'psx';
+    case 'zip':
+      if (filename.toLowerCase().includes('marvel') || filename.toLowerCase().includes('psx')) return 'psx';
+      return 'mame'; // Fallback
+    default: return null;
+  }
+}
+
+// ─── INDEXEDDB AUTO-RESUME & STATE PERSISTENCE ────────────────────────────────
+const DB_NAME = 'GravityArcadeDB';
+const STORE_NAME = 'rom_store';
+let romDb;
+let autoSaveIntervalId = null;
+
+function initDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = (e) => {
+      let db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+      }
+    };
+    request.onsuccess = (e) => {
+      romDb = e.target.result;
+      resolve(romDb);
+    };
+    request.onerror = (e) => reject(e);
+  });
+}
+
+async function saveLastGameToDB(type, name, core, data) {
+  try {
+    let bufferToSave = null;
+    if (type === 'local') {
+      bufferToSave = data instanceof ArrayBuffer ? data : await data.arrayBuffer();
+    }
+    
+    if (!romDb) await initDB();
+    const tx = romDb.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    if (type === 'local') {
+      store.put({ id: 'last_game', type: 'local', name, core, buffer: bufferToSave, timestamp: Date.now() });
+    } else {
+      store.put({ id: 'last_game', type: 'url', name, core, url: data, timestamp: Date.now() });
+    }
+  } catch (e) {
+    console.error("Could not save last game to DB", e);
+  }
+}
+
+async function loadLastGameFromDB() {
+  try {
+    if (!romDb) await initDB();
+    const tx = romDb.transaction(STORE_NAME, 'readonly');
+    const store = tx.objectStore(STORE_NAME);
+    
+    // Try unified last_game key first
+    const reqGame = store.get('last_game');
+    reqGame.onsuccess = () => {
+      const data = reqGame.result;
+      if (!data) {
+        // Fallback to legacy last_rom format if present
+        const reqOld = store.get('last_rom');
+        reqOld.onsuccess = () => {
+          const oldData = reqOld.result;
+          if (oldData && oldData.buffer) {
+            proceedWithResume({
+              type: 'local',
+              name: oldData.name,
+              core: oldData.core,
+              buffer: oldData.buffer
+            });
+          } else {
+            showEmptyState();
+          }
+        };
+        reqOld.onerror = () => showEmptyState();
+        return;
+      }
+      proceedWithResume(data);
+    };
+    reqGame.onerror = () => showEmptyState();
+  } catch (e) {
+    console.error("Could not load last game from DB", e);
+    showEmptyState();
+  }
+}
+
+async function proceedWithResume(gameData) {
+  const stateRecord = await getStateFromDB(gameData.name);
+  const stateBuffer = stateRecord ? stateRecord.buffer : null;
+  
+  const container = document.getElementById('game-container');
+  if (!container) return;
+  
+  let gameUrlOrBlob;
+  if (gameData.type === 'local') {
+    const fileObj = new File([gameData.buffer], gameData.name);
+    activeBlob = URL.createObjectURL(fileObj);
+    gameUrlOrBlob = activeBlob;
+  } else {
+    gameUrlOrBlob = gameData.url;
+  }
+  activeCore = gameData.core;
+  
+  if (stateBuffer) {
+    const timestampToUse = (stateRecord && stateRecord.timestamp) ? stateRecord.timestamp : gameData.timestamp;
+    const timeStr = timestampToUse ? new Date(timestampToUse).toLocaleTimeString() : 'JUST NOW';
+    container.innerHTML = `
+      <div class="resume-overlay">
+        <div class="resume-title">⚡ RECOVERY SEQUENCE ACTIVE</div>
+        <div class="resume-game-card">
+          <div class="resume-game-title">${gameData.name}</div>
+          <div class="resume-game-meta">
+            <span class="resume-game-sys">${gameData.core.toUpperCase()}</span>
+            <span>•</span>
+            <span>LAST STATE: ${timeStr}</span>
+          </div>
+        </div>
+        <div class="resume-actions">
+          <button class="resume-btn resume-btn-primary" onclick="launchResumedGame(true)">⚡ RESUME MISSION</button>
+          <button class="resume-btn resume-btn-secondary" onclick="launchResumedGame(false)">🔄 Restart Fresh</button>
+        </div>
+      </div>
+    `;
+  } else {
+    container.innerHTML = `
+      <div class="resume-overlay">
+        <div class="resume-title">🕹️ RESTORE LAST GAME</div>
+        <div class="resume-game-card">
+          <div class="resume-game-title">${gameData.name}</div>
+          <div class="resume-game-meta">
+            <span class="resume-game-sys">${gameData.core.toUpperCase()}</span>
+          </div>
+        </div>
+        <div class="resume-actions">
+          <button class="resume-btn resume-btn-primary" onclick="launchResumedGame(false)">▶️ POWER UP CORES</button>
+          <button class="resume-btn resume-btn-secondary" onclick="showEmptyState()">❌ Cancel</button>
+        </div>
+      </div>
+    `;
+  }
+  
+  window.temp_resume_gameData = gameData;
+  window.temp_resume_gameUrlOrBlob = gameUrlOrBlob;
+}
+
+function launchResumedGame(useSaveState) {
+  const gameData = window.temp_resume_gameData;
+  const gameUrlOrBlob = window.temp_resume_gameUrlOrBlob;
+  if (!gameData) return;
+  
+  window.EJS_startOnLoaded = true;
+  loadEmulator(gameData.core, gameUrlOrBlob, gameData.name, !useSaveState);
+  
+  delete window.temp_resume_gameData;
+  delete window.temp_resume_gameUrlOrBlob;
+}
+
+function showEmptyState() {
+  const container = document.getElementById('game-container');
+  if (container) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🕹️</div>
+        <div class="empty-title">Insert Coin</div>
+        <div class="empty-desc">Drag & drop a local ROM or select a quick demo game in the left sidebar to power up the screen!</div>
+      </div>
+    `;
+  }
+  document.getElementById('cabinetActiveSystem').textContent = 'NONE';
+  document.getElementById('cabinetStatusText').textContent = 'CABINET OFFLINE';
+  document.getElementById('cabinetStatusDot').className = 'status-dot';
+  activeCore = null;
+}
+
+// Save state to Backend or IndexedDB (both global last_state and game-specific)
+async function saveStateToDB(gameName, stateBuffer) {
+  try {
+    // Try backend first if configured
+    if (arcadeConfig && arcadeConfig.saveFolder) {
+      try {
+        const res = await fetch(`/api/arcade/state?game=${encodeURIComponent(gameName)}`, {
+          method: 'POST',
+          body: stateBuffer,
+          headers: { 'Content-Type': 'application/octet-stream' }
+        });
+        if (res.ok) {
+          console.log("[Backend Sync] State saved to:", arcadeConfig.saveFolder);
+          // Also update IDB pointer just for fast resuming awareness
+          if (!romDb) await initDB();
+          const tx = romDb.transaction(STORE_NAME, 'readwrite');
+          const store = tx.objectStore(STORE_NAME);
+          store.put({ id: 'last_state', buffer: null, backend: true, name: gameName, timestamp: Date.now() });
+          return;
+        }
+      } catch (e) {
+        console.error("Backend save failed, falling back to IDB", e);
+      }
+    }
+    
+    // Fallback to IndexedDB
+    if (!romDb) await initDB();
+    const tx = romDb.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    store.put({ id: 'last_state', buffer: stateBuffer, name: gameName, timestamp: Date.now() });
+    store.put({ id: 'state_' + gameName, buffer: stateBuffer, name: gameName, timestamp: Date.now() });
+  } catch (e) {
+    console.error("Could not save state to DB", e);
+  }
+}
+
+// Get state from Backend or IndexedDB
+function getStateFromDB(gameName) {
+  return new Promise(async (resolve) => {
+    try {
+      // Try backend first if configured
+      if (arcadeConfig && arcadeConfig.saveFolder) {
+        try {
+          const res = await fetch(`/api/arcade/state?game=${encodeURIComponent(gameName)}`);
+          if (res.ok) {
+            const arrayBuffer = await res.arrayBuffer();
+            const timestamp = res.headers.get('Last-Modified') ? new Date(res.headers.get('Last-Modified')).getTime() : Date.now();
+            console.log("[Backend Sync] State loaded from:", arcadeConfig.saveFolder);
+            resolve({ buffer: new Uint8Array(arrayBuffer), name: gameName, timestamp });
+            return;
+          }
+        } catch (e) {
+          console.log("Backend state load failed, trying IDB", e);
+        }
+      }
+
+      if (!romDb) await initDB();
+      const tx = romDb.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      
+      const reqSpecific = store.get('state_' + gameName);
+      reqSpecific.onsuccess = () => {
+        if (reqSpecific.result && reqSpecific.result.buffer) {
+          resolve(reqSpecific.result);
+          return;
+        }
+        
+        const reqGlobal = store.get('last_state');
+        reqGlobal.onsuccess = () => {
+          if (reqGlobal.result && reqGlobal.result.name === gameName && reqGlobal.result.buffer) {
+            resolve(reqGlobal.result);
+          } else if (reqGlobal.result && reqGlobal.result.name === gameName && reqGlobal.result.backend) {
+            // It's in the backend but we failed to fetch it above
+            resolve(null);
+          } else {
+            resolve(null);
+          }
+        };
+        reqGlobal.onerror = () => resolve(null);
+      };
+      reqSpecific.onerror = () => resolve(null);
+    } catch (e) {
+      console.error(e);
+      resolve(null);
+    }
+  });
+}
+
+// Synchronously sync unload save state from LocalStorage on launch
+async function syncUnloadSaveToDB() {
+  if (isEjsCrashed) return;
+  try {
+    const base64 = localStorage.getItem('gravity_last_state_base64');
+    const gameName = localStorage.getItem('gravity_last_state_game');
+    if (base64 && gameName) {
+      console.log(`[Sync] Found unsaved state in LocalStorage for "${gameName}". Migrating...`);
+      const binaryString = atob(base64);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      
+      await saveStateToDB(gameName, bytes);
+      
+      localStorage.removeItem('gravity_last_state_base64');
+      localStorage.removeItem('gravity_last_state_game');
+      console.log("[Sync] Unload state successfully persisted & freed LocalStorage.");
+    }
+  } catch (e) {
+    console.error("Failed to sync unload save from LocalStorage:", e);
+  }
+}
+
+// Start periodic background auto-saving (every 15 seconds)
+function startAutoSaveTimer() {
+  if (autoSaveIntervalId) clearInterval(autoSaveIntervalId);
+  
+  autoSaveIntervalId = setInterval(async () => {
+    if (isEjsCrashed) return;
+    try {
+      if (window.EJS_emulator && window.EJS_emulator.gameManager && typeof window.EJS_emulator.gameManager.getState === "function") {
+        const stateBuffer = window.EJS_emulator.gameManager.getState();
+        if (stateBuffer && stateBuffer.length > 0) {
+          await saveStateToDB(window.EJS_gameName, stateBuffer);
+          console.log(`[Auto-Save] Successfully saved state for "${window.EJS_gameName}"`);
+          
+          // Flash status dot green to indicate auto-save
+          const dot = document.getElementById('cabinetStatusDot');
+          if (dot) {
+            dot.style.background = 'var(--primary)';
+            setTimeout(() => {
+              dot.style.background = '';
+            }, 800);
+          }
+        }
+      }
+    } catch (e) {
+      // Normal when the core is busy, transitioning, or not yet initialized
+    }
+  }, 15000);
+}
+
+async function autoSaveCurrentGame() {
+  if (isEjsCrashed) return;
+  if (window.EJS_emulator && window.EJS_emulator.gameManager && typeof window.EJS_emulator.gameManager.getState === "function") {
+    try {
+      const stateBuffer = window.EJS_emulator.gameManager.getState();
+      if (stateBuffer && stateBuffer.length > 0) {
+        await saveStateToDB(window.EJS_gameName, stateBuffer);
+        console.log(`[Auto-Save] Saved state for "${window.EJS_gameName}" before switching.`);
+      }
+    } catch (e) {
+      console.error("Error auto-saving current game:", e);
+    }
+  }
+}
+
+async function handleFile(file) {
+  const core = detectCoreByExtension(file.name);
+  if (!core) {
+    alert(`Unsupported file format. Please load a valid ROM (.nes, .smc, .sfc, .gen, .md, .gba, .gbc, etc.).`);
+    return;
+  }
+  
+  await autoSaveCurrentGame();
+  
+  // Revoke old blob to save memory
+  if (activeBlob) {
+    URL.revokeObjectURL(activeBlob);
+  }
+
+  activeCore = core;
+  activeBlob = URL.createObjectURL(file);
+  saveLastGameToDB('local', file.name, core, file); // Auto-save for resume
+  
+  // Reset startOnLoad for manual loads
+  window.EJS_startOnLoaded = false;
+  
+  loadEmulator(core, activeBlob, file.name);
+}
+
+function searchVimmsLair() {
+  const query = document.getElementById('vimmSearchInput').value.trim();
+  if (!query) {
+    alert('Please enter a game name to search.');
+    return;
+  }
+  
+  const url = `https://vimm.net/vault/?p=list&q=${encodeURIComponent(query)}`;
+  window.open(url, '_blank');
+}
+
+async function quickLoadDemo(core, url, title) {
+  await autoSaveCurrentGame();
+  
+  activeCore = core;
+  if (activeBlob) {
+    URL.revokeObjectURL(activeBlob);
+    activeBlob = null;
+  }
+  
+  // Log the visit to database
+  fetch('/api/arcade/visit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ game: title })
+  }).catch(e => console.warn('Failed to log game visit:', e));
+  
+  // Reset startOnLoad for manual loads
+  window.EJS_startOnLoaded = false;
+  
+  saveLastGameToDB('url', title, core, url); // Auto-save for resume
+  
+  loadEmulator(core, url, title);
+}
+
+function showAudioOverlay() {
+  const existing = document.getElementById('audioAutoplayOverlay');
+  if (existing) existing.remove();
+
+  const bezel = document.querySelector('.cabinet-bezel');
+  if (!bezel) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'audioAutoplayOverlay';
+  overlay.className = 'audio-autoplay-overlay';
+  overlay.innerHTML = `
+    <span class="audio-autoplay-icon">🔊</span>
+    <span class="audio-autoplay-text">Game Auto-Resumed! Click here to activate audio</span>
+  `;
+
+  overlay.onclick = () => {
+    // Attempt standard resume on direct EmulatorJS audioContext if present
+    try {
+      if (window.EJS_emulator && window.EJS_emulator.audioContext) {
+        window.EJS_emulator.audioContext.resume();
+      }
+    } catch (e) {
+      console.warn("Failed to resume EmulatorJS AudioContext directly:", e);
+    }
+
+    // Fallback: resume any audio context on the page
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) {
+      try {
+        const dummy = new AudioCtx();
+        dummy.resume();
+      } catch (e) {}
+    }
+
+    // Fade out smoothly
+    overlay.style.opacity = '0';
+    overlay.style.transform = 'translateX(-50%) translateY(10px)';
+    setTimeout(() => overlay.remove(), 300);
+  };
+
+  bezel.appendChild(overlay);
+}
+
+async function loadEmulator(core, gameUrl, title, bypassSaveState = false) {
+  isEjsCrashed = false;
+  // Sync Game Genie Panel — auto-select matching game in dropdown
+  if (typeof ggAutoSelectForGame === 'function') {
+    ggAutoSelectForGame(title);
+  }
+
+  // Clear container
+  const container = document.getElementById('game-container');
+  container.innerHTML = '<div id="game" class="ejs_parent" style="width:100%; height:100%;"></div>';
+
+  // Revoke old loadState URL to avoid memory leaks
+  if (window.EJS_loadStateURL && window.EJS_loadStateURL.startsWith('blob:')) {
+    URL.revokeObjectURL(window.EJS_loadStateURL);
+    delete window.EJS_loadStateURL;
+  }
+
+  // Check if we have a saved state for this game
+  let stateBuffer = null;
+  if (!bypassSaveState) {
+    try {
+      const stateRecord = await getStateFromDB(title);
+      stateBuffer = stateRecord ? stateRecord.buffer : null;
+    } catch (e) {
+      console.warn("Could not retrieve state from DB:", e);
+    }
+  }
+
+  // Config variables
+  window.EJS_player = '#game';
+  window.EJS_core = core;
+  window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+  
+  // Make gameUrl absolute so it resolves correctly inside the srcdoc iframe
+  const absoluteGameUrl = (gameUrl.startsWith('http') || gameUrl.startsWith('blob:')) 
+    ? gameUrl 
+    : new URL(gameUrl, window.location.href).href;
+
+  // Set global variables so parent save-state functions know which game is running
+  window.EJS_gameUrl = absoluteGameUrl;
+  window.EJS_gameName = title;
+
+  // Build query string for the iframe
+  const params = new URLSearchParams({
+    url: absoluteGameUrl,
+    core: core,
+    name: title
+  });
+  
+  if (stateBuffer) {
+    const stateBlob = new Blob([stateBuffer], { type: 'application/octet-stream' });
+    const blobUrl = URL.createObjectURL(stateBlob);
+    params.set('stateUrl', blobUrl);
+    console.log("💾 Found existing save state. Configured auto-load from Blob URL.");
+    
+    // Force startOnLoad to true so it loads seamlessly
+    window.EJS_startOnLoaded = true;
+    showStatusNotification("💾 STATE RESTORED AUTOMATICALLY");
+  } else {
+    delete window.EJS_loadStateURL;
+  }
+
+  // Generate and inject cheats
+  const cheatUrl = generateCheatFileUrl(title);
+  if (cheatUrl) {
+    window.EJS_cheats = cheatUrl;
+    window.EJS_cheatsUrl = cheatUrl;
+  } else {
+    delete window.EJS_cheats;
+    delete window.EJS_cheatsUrl;
+  }
+
+  // Manage Autoplay audio notification overlay
+  if (window.EJS_startOnLoaded) {
+    showAudioOverlay();
+  } else {
+    const existing = document.getElementById('audioAutoplayOverlay');
+    if (existing) existing.remove();
+  }
+
+  container.innerHTML = '';
+  
+  const iframe = document.createElement('iframe');
+  iframe.id = 'emu-iframe';
+  iframe.allow = 'fullscreen; gamepad; autoplay';
+  iframe.style.cssText = 'width:100%; height:100%; border:none;';
+  
+  // Use a physical HTML file for the iframe with parameters
+  iframe.src = `emulator_frame.html?${params.toString()}`;
+  
+  iframe.onload = () => {
+    try {
+      const win = iframe.contentWindow;
+      
+      // Reset isEjsCrashed on load
+      isEjsCrashed = false;
+
+      win.addEventListener('error', (e) => {
+        handleEmulatorCrash(e.message || "Script exception");
+      });
+      
+      win.addEventListener('unhandledrejection', (e) => {
+        const err = e.reason ? (e.reason.message || e.reason.toString()) : "Unhandled rejection";
+        handleEmulatorCrash(err);
+      });
+
+      // Override console.error/warn to catch WASM aborts
+      const origErr = win.console.error;
+      win.console.error = function(...args) {
+        origErr.apply(win.console, args);
+        const msg = args.join(' ');
+        if (msg.includes('Aborted(') || msg.includes('RuntimeError') || msg.includes('Failed to start game')) {
+          handleEmulatorCrash(msg);
+        }
+      };
+
+      const origWarn = win.console.warn;
+      win.console.warn = function(...args) {
+        origWarn.apply(win.console, args);
+        const msg = args.join(' ');
+        if (msg.includes('Aborted(') || msg.includes('RuntimeError') || msg.includes('Failed to start game')) {
+          handleEmulatorCrash(msg);
+        }
+      };
+    } catch (err) {
+      console.warn("Iframe same-origin shield blocked trap:", err);
+    }
+  };
+  
+  container.appendChild(iframe);
+
+  if (!window._ejsProxyInstalled) {
+    window._ejsProxyInstalled = true;
+    Object.defineProperty(window, 'EJS_emulator', {
+      get: function() {
+        const frm = document.getElementById('emu-iframe');
+        return frm && frm.contentWindow ? frm.contentWindow.EJS_emulator : null;
+      },
+      set: function(val) { },
+      configurable: true
+    });
+  }
+
+  // Update status labels
+  document.getElementById('cabinetActiveSystem').textContent = core.toUpperCase();
+  document.getElementById('cabinetStatusText').textContent = `RUNNING: ${title.substring(0, 20)}`;
+  
+  const statusDot = document.getElementById('cabinetStatusDot');
+  statusDot.className = 'status-dot active';
+
+  // Start the background auto-save loop
+  startAutoSaveTimer();
+}
+
+function handleEmulatorCrash(errMessage) {
+  if (isEjsCrashed) return; // Prevent multiple nested error pages
+  isEjsCrashed = true;
+  
+  // Clear periodic auto-save
+  if (autoSaveIntervalId) {
+    clearInterval(autoSaveIntervalId);
+    autoSaveIntervalId = null;
+  }
+  
+  // Turn status dot red
+  const statusDot = document.getElementById('cabinetStatusDot');
+  if (statusDot) {
+    statusDot.className = 'status-dot';
+    statusDot.style.background = '#ff4b4b';
+  }
+  
+  const statusText = document.getElementById('cabinetStatusText');
+  if (statusText) {
+    statusText.textContent = "EMULATOR ERROR";
+    statusText.style.color = '#ff4b4b';
+  }
+
+  const container = document.getElementById('game-container');
+  if (!container) return;
+  
+  // Premium Retro Error Terminal Card
+  container.innerHTML = `
+    <div class="empty-state crash-recovery-card" style="padding: 30px; border: 1px solid rgba(255, 75, 75, 0.3); background: rgba(15, 5, 5, 0.85); border-radius: 8px; max-width: 90%; margin: auto; box-shadow: 0 0 20px rgba(255, 75, 75, 0.2); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); animation: floatUp 0.5s ease-out;">
+      <div class="empty-icon" style="filter: drop-shadow(0 0 12px rgba(255, 75, 75, 0.5)); font-size: 50px;">⚠️</div>
+      <div class="empty-title" style="color: #ff4b4b; font-family: 'Orbitron', sans-serif; font-size: 15px; font-weight: 900; letter-spacing: 1px; margin-top: 5px;">EMULATOR EXCEPTION TRAPPED</div>
+      <div class="empty-desc" style="font-size: 11px; line-height: 1.6; color: #ffb3b3; max-width: 440px; margin: 5px auto 10px auto;">
+        An unexpected error occurred during boot/rendering. This is typically caused by a corrupted save-state file or WebGL context loss.
+      </div>
+      <div style="background: rgba(0,0,0,0.6); border: 1px solid rgba(255,75,75,0.15); border-radius: 4px; padding: 12px; width: 100%; box-sizing: border-box; text-align: left; font-family: 'Fira Code', monospace; font-size: 10px; color: #ff8080; word-break: break-all; max-height: 90px; overflow-y: auto; margin-bottom: 15px;">
+        <span style="color:#ff4b4b; font-weight:bold;">[ABORT_LOG]:</span> ${errMessage}
+      </div>
+      <div style="display: flex; gap: 12px; width: 100%; justify-content: center; flex-wrap: wrap;">
+        <button class="btn btn-primary" onclick="window.forceBootFresh()" style="background: var(--primary); border-color: var(--primary); color: #000; font-weight: 800; font-size: 11px; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-family: 'Orbitron', sans-serif; text-transform: uppercase;">
+          ⚡ Force Boot Fresh
+        </button>
+        <button class="btn" onclick="window.deleteSavedStateAndReset()" style="background: rgba(255, 75, 75, 0.1); border: 1px solid #ff4b4b; color: #ffb3b3; font-weight: bold; font-size: 11px; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-family: 'Orbitron', sans-serif; text-transform: uppercase;">
+          🗑️ Wipe State & Start Fresh
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+window.forceBootFresh = function() {
+  isEjsCrashed = false;
+  const statusDot = document.getElementById('cabinetStatusDot');
+  if (statusDot) {
+    statusDot.style.background = '';
+    statusDot.className = 'status-dot active';
+  }
+  const statusText = document.getElementById('cabinetStatusText');
+  if (statusText) {
+    statusText.style.color = '';
+  }
+  loadEmulator(activeCore, activeBlob || window.EJS_gameUrl, window.EJS_gameName, true);
+};
+
+window.deleteSavedStateAndReset = async function() {
+  if (confirm("Are you sure you want to permanently delete the saved state file for this game? This cannot be undone.")) {
+    await clearActiveGameState();
+    window.forceBootFresh();
+  }
+};
+
+async function clearActiveGameState() {
+  if (!window.EJS_gameName) return;
+  const gameName = window.EJS_gameName;
+  try {
+    // 1. Delete from Backend
+    const backendRes = await fetch(`/api/arcade/state?game=${encodeURIComponent(gameName)}`, {
+      method: 'DELETE'
+    });
+    const backendData = await backendRes.json();
+    console.log("[Backend Sync] DELETE state response:", backendData);
+    
+    // 2. Delete from IndexedDB
+    if (!romDb) await initDB();
+    const tx = romDb.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    
+    store.delete('state_' + gameName);
+    
+    // Delete global last_state if it's for this game
+    const reqGlobal = store.get('last_state');
+    reqGlobal.onsuccess = () => {
+      if (reqGlobal.result && reqGlobal.result.name === gameName) {
+        const tx2 = romDb.transaction(STORE_NAME, 'readwrite');
+        const store2 = tx2.objectStore(STORE_NAME);
+        store2.delete('last_state');
+      }
+    };
+    
+    // 3. Clear LocalStorage sync buffers to avoid re-saving
+    localStorage.removeItem('gravity_last_state_base64');
+    localStorage.removeItem('gravity_last_state_game');
+    
+    showStatusNotification("🗑️ SAVED STATE DELETED CLEANLY");
+  } catch (e) {
+    console.error("Failed to delete saved state:", e);
+    alert("Error deleting saved state: " + e.message);
+  }
+}
+
+function resetCabinet() {
+  if (!activeCore) {
+    alert('No active ROM loaded.');
+    return;
+  }
+  // Soft reset startOnLoad and bypass save state loading to start fresh
+  window.EJS_startOnLoaded = false;
+  loadEmulator(activeCore, activeBlob || window.EJS_gameUrl, window.EJS_gameName, true);
+}
+
+// ─── PREMIUM RETRO TOAST & STATE SHORTCUTS ────────────────────────────────────
+function showStatusNotification(message, duration = 3000) {
+  const statusText = document.getElementById('cabinetStatusText');
+  if (!statusText) return;
+  const originalText = statusText.textContent;
+  statusText.textContent = message;
+  statusText.style.color = 'var(--primary)';
+  statusText.style.fontWeight = '800';
+  
+  setTimeout(() => {
+    if (statusText.textContent === message) {
+      statusText.textContent = originalText;
+      statusText.style.color = '';
+      statusText.style.fontWeight = '';
+    }
+  }, duration);
+}
+
+async function triggerManualSave() {
+  if (!window.EJS_emulator || !window.EJS_emulator.gameManager || typeof window.EJS_emulator.gameManager.getState !== "function") {
+    alert("Emulator is booting up or not active yet. Please start a game first!");
+    return;
+  }
+  try {
+    const stateBuffer = window.EJS_emulator.gameManager.getState();
+    if (stateBuffer && stateBuffer.length > 0) {
+      await saveStateToDB(window.EJS_gameName, stateBuffer);
+      showStatusNotification("💾 QUICK SAVE SUCCESSFUL!");
+    } else {
+      alert("Could not extract state. Try again in a brief second.");
+    }
+  } catch (e) {
+    console.error("Manual save failed:", e);
+    alert("Error performing save state: " + e.message);
+  }
+}
+
+async function triggerManualLoad() {
+  if (!window.EJS_emulator) {
+    alert("No game is currently running.");
+    return;
+  }
+  
+  const confirmed = confirm("Restore last quick-save state? Unsaved progress will be lost.");
+  if (!confirmed) return;
+  
+  showStatusNotification("📂 RESTORING STATE...");
+  window.EJS_startOnLoaded = true;
+  loadEmulator(activeCore, activeBlob || window.EJS_gameUrl, window.EJS_gameName);
+}
+
+// ─── GLOBAL HOOKS FOR EMULATORJS EVENTS ───────────────────────────────────────
+window.EJS_onSaveState = function(e) {
+  if (isEjsCrashed) return;
+  console.log("💾 EJS_onSaveState event received:", e);
+  let stateBuffer = null;
+  if (e) {
+    if (e.state) {
+      stateBuffer = e.state;
+    } else if (e instanceof Uint8Array || e instanceof ArrayBuffer) {
+      stateBuffer = e;
+    } else if (Array.isArray(e)) {
+      for (const item of e) {
+        if (item instanceof Uint8Array || item instanceof ArrayBuffer || (item && item.constructor && item.constructor.name === 'Uint8Array')) {
+          stateBuffer = item;
+          break;
+        }
+      }
+    }
+  }
+
+  if (stateBuffer) {
+    saveStateToDB(window.EJS_gameName, stateBuffer);
+    showStatusNotification("💾 STATE SAVED TO DATABASE");
+    
+    // Flash green toast inside the emulator canvas so the user knows it worked!
+    if (window.EJS_emulator && typeof window.EJS_emulator.displayMessage === 'function') {
+      window.EJS_emulator.displayMessage("State Saved to Vault");
+    }
+  }
+};
+
+// Auto-save synchronously to LocalStorage on unload
+window.addEventListener('beforeunload', () => {
+  if (isEjsCrashed) return;
+  try {
+    if (window.EJS_emulator && window.EJS_emulator.gameManager && typeof window.EJS_emulator.gameManager.getState === "function" && window.EJS_gameName) {
+      let stateBuffer = window.EJS_emulator.gameManager.getState();
+      if (stateBuffer) {
+        if (stateBuffer instanceof ArrayBuffer) {
+          stateBuffer = new Uint8Array(stateBuffer);
+        } else if (stateBuffer.buffer && stateBuffer.buffer instanceof ArrayBuffer) {
+          stateBuffer = new Uint8Array(stateBuffer.buffer);
+        }
+        if (stateBuffer.length > 0) {
+          // Fast, chunked ArrayBuffer to base64 conversion to avoid browser thread termination
+          let binary = '';
+          const len = stateBuffer.length;
+          const chunk_size = 8192;
+          for (let i = 0; i < len; i += chunk_size) {
+            const chunk = stateBuffer.subarray(i, i + chunk_size);
+            binary += String.fromCharCode.apply(null, chunk);
+          }
+          const base64 = btoa(binary);
+          localStorage.setItem('gravity_last_state_base64', base64);
+          localStorage.setItem('gravity_last_state_game', window.EJS_gameName);
+        }
+      }
+    }
+  } catch (e) {
+    // Fail silently on close
+  }
+});
+
+// ─── GAME GENIE CODE DATABASE ──────────────────────────────────────────────
+// Sourced per guide: GameFAQs + Ethereal Games, format XXXX-XXXX (verified)
+const GG_DB = [
+  // ── CONTRA HARD CORPS (Genesis, USA) ─────────────────────────────────────
+  { game:'Contra Hard Corps', platform:'Genesis', region:'USA', code:'RHVA-A6WR', effect:'Invincibility',          cat:'inv',   src:'GameFAQs + Ethereal' },
+  { game:'Contra Hard Corps', platform:'Genesis', region:'USA', code:'RERT-C6X4', effect:'Infinite Lives',          cat:'lives', src:'Ethereal Games' },
+  { game:'Contra Hard Corps', platform:'Genesis', region:'USA', code:'RENT-C6X4', effect:'Start with 9 Lives',       cat:'lives', src:'GameFAQs' },
+  { game:'Contra Hard Corps', platform:'Genesis', region:'USA', code:'H9GA-AAE6', effect:'All Weapons',             cat:'wpn',   src:'GameFAQs + Ethereal' },
+  { game:'Contra Hard Corps', platform:'Genesis', region:'USA', code:'GJVA-A6YR', effect:'Infinite Continues',       cat:'lives', src:'Ethereal Games' },
+  { game:'Contra Hard Corps', platform:'Genesis', region:'USA', code:'AJLA-AANR', effect:'Never Lose Weapon on Hit', cat:'wpn',   src:'GameFAQs' },
+  { game:'Contra Hard Corps', platform:'Genesis', region:'USA', code:'RHVA-A6VR', effect:'Super Speed',             cat:'pwr',   src:'Ethereal Games' },
+  { game:'Contra Hard Corps', platform:'Genesis', region:'USA', code:'NMVA-A6WR', effect:'Walk Through Walls',       cat:'dbg',   src:'GameFAQs' },
+
+  // ── SONIC THE HEDGEHOG 2 (Genesis, USA) ──────────────────────────────────
+  { game:'Sonic The Hedgehog 2', platform:'Genesis', region:'USA', code:'ACLA-BRBR', effect:'Infinite Lives',        cat:'lives', src:'GameFAQs' },
+  { game:'Sonic The Hedgehog 2', platform:'Genesis', region:'USA', code:'AARA-AABN', effect:'Invincibility Always',   cat:'inv',   src:'Ethereal Games' },
+  { game:'Sonic The Hedgehog 2', platform:'Genesis', region:'USA', code:'ACRA-BTHJ', effect:'Keep Rings After Hit',  cat:'pwr',   src:'GameFAQs' },
+  { game:'Sonic The Hedgehog 2', platform:'Genesis', region:'USA', code:'AAKA-AA7A', effect:'Start with 0 Rings',    cat:'dbg',   src:'Ethereal Games' },
+  { game:'Sonic The Hedgehog 2', platform:'Genesis', region:'USA', code:'GCCA-BT7A', effect:'Super Speed Rings',     cat:'pwr',   src:'GameFAQs' },
+  { game:'Sonic The Hedgehog 2', platform:'Genesis', region:'USA', code:'REYA-A6XA', effect:'Moon Jump',             cat:'pwr',   src:'Ethereal Games' },
+
+  // ── STREETS OF RAGE 2 (Genesis, USA) ─────────────────────────────────────
+  { game:'Streets of Rage 2', platform:'Genesis', region:'USA', code:'AJ3A-AA4T', effect:'Infinite Lives',           cat:'lives', src:'GameFAQs' },
+  { game:'Streets of Rage 2', platform:'Genesis', region:'USA', code:'AJBT-AA4C', effect:'Infinite Health',           cat:'inv',   src:'Ethereal Games' },
+  { game:'Streets of Rage 2', platform:'Genesis', region:'USA', code:'RKBT-A6AT', effect:'Start with 9 Lives',        cat:'lives', src:'GameFAQs' },
+  { game:'Streets of Rage 2', platform:'Genesis', region:'USA', code:'AJBT-AAAT', effect:'Never Lose Health',         cat:'inv',   src:'Ethereal Games' },
+  { game:'Streets of Rage 2', platform:'Genesis', region:'USA', code:'RCHT-A63C', effect:'Max Special Moves',         cat:'wpn',   src:'GameFAQs' },
+
+  // ── TINY TOON ADVENTURES (Genesis, USA) ──────────────────────────────────
+  { game:"Tiny Toon Adventures", platform:'Genesis', region:'USA', code:'AJYT-AA5G', effect:'Infinite Lives',         cat:'lives', src:'Ethereal Games (verified)' },
+  { game:"Tiny Toon Adventures", platform:'Genesis', region:'USA', code:'AJBA-AA58', effect:'Invincible (no damage)',  cat:'inv',   src:'GameFAQs' },
+  { game:"Tiny Toon Adventures", platform:'Genesis', region:'USA', code:'REXT-A6AT', effect:'Start with Max Lives',   cat:'lives', src:'Ereal Games' },
+  { game:"Tiny Toon Adventures", platform:'Genesis', region:'USA', code:'ACXT-AABT', effect:'Infinite Carrots',       cat:'wpn',   src:'GameFAQs' },
+  { game:"Tiny Toon Adventures", platform:'Genesis', region:'USA', code:'NMXT-AABT', effect:'All Levels Unlocked',    cat:'skip',  src:'Ethereal Games' },
+
+  // ── EARTHWORM JIM (Genesis, USA) ─────────────────────────────────────────
+  { game:'Earthworm Jim', platform:'Genesis', region:'USA', code:'AJKT-AA4J', effect:'Infinite Lives',               cat:'lives', src:'GameFAQs' },
+  { game:'Earthworm Jim', platform:'Genesis', region:'USA', code:'AJBT-AA58', effect:'Invincible',                   cat:'inv',   src:'Ethereal Games' },
+  { game:'Earthworm Jim', platform:'Genesis', region:'USA', code:'GCBT-AA4J', effect:'Plasma Blaster Max Ammo',      cat:'wpn',   src:'GameFAQs' },
+  { game:'Earthworm Jim', platform:'Genesis', region:'USA', code:'REKT-A6AT', effect:'Start on Level 2',             cat:'skip',  src:'Ethereal Games' },
+  { game:'Earthworm Jim', platform:'Genesis', region:'USA', code:'NAKT-A6AT', effect:'Start on Level 5',             cat:'skip',  src:'GameFAQs' },
+
+  // ── MORTAL KOMBAT 2 (Genesis, USA) ───────────────────────────────────────
+  { game:'Mortal Kombat 2', platform:'Genesis', region:'USA', code:'AJBT-AAG0', effect:'Infinite Health P1',         cat:'inv',   src:'GameFAQs' },
+  { game:'Mortal Kombat 2', platform:'Genesis', region:'USA', code:'AJBT-AAGR', effect:'Infinite Health P2',         cat:'inv',   src:'Ethereal Games' },
+  { game:'Mortal Kombat 2', platform:'Genesis', region:'USA', code:'REXT-AAGR', effect:'Start at 50% Health',        cat:'dbg',   src:'GameFAQs' },
+  { game:'Mortal Kombat 2', platform:'Genesis', region:'USA', code:'NMBT-AAGA', effect:'Blood Mode Always On',       cat:'pwr',   src:'Ethereal Games' },
+  { game:'Mortal Kombat 2', platform:'Genesis', region:'USA', code:'GCBT-AAGG', effect:'One-Hit Kills',              cat:'dbg',   src:'GameFAQs' },
+
+  // ── SPY HUNTER (NES, USA) ────────────────────────────────────────────────
+  { game:'Spy Hunter', platform:'NES', region:'USA', code:'SXKAYOVK', effect:'Infinite Lives',                    cat:'lives', src:'GameGenie.com' },
+  { game:'Spy Hunter', platform:'NES', region:'USA', code:'SZKUANVK', effect:'Infinite Missiles',                 cat:'wpn',   src:'GameGenie.com' },
+  { game:'Spy Hunter', platform:'NES', region:'USA', code:'VXELTVSE', effect:'Infinite Smoke',                    cat:'wpn',   src:'GameGenie.com' },
+  { game:'Spy Hunter', platform:'NES', region:'USA', code:'ZEEXKIAA', effect:'Start with 2 Extra Lives',            cat:'lives', src:'GameGenie.com' },
+  { game:'Spy Hunter', platform:'NES', region:'USA', code:'TEEXKIAA', effect:'Start with 6 Extra Lives',            cat:'lives', src:'GameGenie.com' },
+  { game:'Spy Hunter', platform:'NES', region:'USA', code:'TEEXLILA', effect:'Double Missiles on Pick-Up',          cat:'wpn',   src:'GameGenie.com' },
+  { game:'Spy Hunter', platform:'NES', region:'USA', code:'YAEZNIYE', effect:'Slow Down Timer',                     cat:'pwr',   src:'GameGenie.com' },
+  { game:'Spy Hunter', platform:'NES', region:'USA', code:'GXSAKUSE+GXSANUSE', effect:'Keep Special Weapons',       cat:'wpn',   src:'GameGenie.com' },
+  { game:'Spy Hunter', platform:'NES', region:'USA', code:'SLXSVISA', effect:'Always On Land (nensondubois)',       cat:'dbg',   src:'nensondubois' },
+  { game:'Spy Hunter', platform:'NES', region:'USA', code:'SLEPELSA', effect:'Cannot Die (nensondubois)',             cat:'inv',   src:'nensondubois' },
+  { game:'Spy Hunter', platform:'NES', region:'USA', code:'SLOSVISA+SUSIVGSA', effect:'Drive Over Water & Pits',      cat:'pwr',   src:'nensondubois' },
+  { game:'Spy Hunter', platform:'NES', region:'USA', code:'AESOSXPY', effect:'Invincible (nensondubois)',           cat:'inv',   src:'nensondubois' },
+
+  // ── SUPER SPY HUNTER (NES, USA) ──────────────────────────────────────────
+  { game:'Super Spy Hunter', platform:'NES', region:'USA', code:'AGZAPZ', effect:'Strange Noises',                   cat:'dbg',   src:'GameGenie.com' },
+  { game:'Super Spy Hunter', platform:'NES', region:'USA', code:'PEZPEZ', effect:'Weird Enemies',                     cat:'dbg',   src:'GameGenie.com' },
+  { game:'Super Spy Hunter', platform:'NES', region:'USA', code:'PIZPIZ', effect:'Obstacle Glitch',                   cat:'dbg',   src:'GameGenie.com' },
+  { game:'Super Spy Hunter', platform:'NES', region:'USA', code:'OAOAOA', effect:'Invisible Gun Turrets',             cat:'dbg',   src:'GameGenie.com' },
+  { game:'Super Spy Hunter', platform:'NES', region:'USA', code:'SZPATO', effect:'Disable Sound',                     cat:'dbg',   src:'GameGenie.com' },
+
+  // ── CAPTAIN AMERICA AND THE AVENGERS (NES, USA) ──────────────────────────
+  { game:'Captain America and the Avengers', platform:'NES', region:'USA', code:'SZSULYVG', effect:'Infinite Continues',                        cat:'lives', src:'Game Genie codebook' },
+  { game:'Captain America and the Avengers', platform:'NES', region:'USA', code:'GPNXIUZA', effect:'Large Power Stones Worth 20 pts',            cat:'pwr',   src:'Game Genie codebook' },
+  { game:'Captain America and the Avengers', platform:'NES', region:'USA', code:'TPNXIUZE', effect:'Large Power Stones Worth 30 pts',            cat:'pwr',   src:'Game Genie codebook' },
+  { game:'Captain America and the Avengers', platform:'NES', region:'USA', code:'ZLNXIUZA', effect:'Large Power Stones Worth 50 pts',            cat:'pwr',   src:'Game Genie codebook' },
+  { game:'Captain America and the Avengers', platform:'NES', region:'USA', code:'ZAUZILPE', effect:'Small Power Stones Worth 10 pts',            cat:'pwr',   src:'Game Genie codebook' },
+  { game:'Captain America and the Avengers', platform:'NES', region:'USA', code:'OLNUNEOO', effect:'Infinite Energy',                           cat:'inv',   src:'Game Genie codebook' },
+  { game:'Captain America and the Avengers', platform:'NES', region:'USA', code:'LSUPUELO', effect:'Hawkeye Shoots Arrows Faster',               cat:'wpn',   src:'Game Genie codebook' },
+  { game:'Captain America and the Avengers', platform:'NES', region:'USA', code:'VYNXTXNN+ZEEZAZPA', effect:'Faster Capt. & Hawkeye (1-dir)',    cat:'pwr',   src:'Game Genie codebook' },
+  { game:'Captain America and the Avengers', platform:'NES', region:'USA', code:'SYNXTXNN+LEEZAZPA', effect:'Even Faster Capt. & Hawkeye (1-dir)', cat:'pwr', src:'Game Genie codebook' },
+];
+
+const GG_GAMES = [...new Set(GG_DB.map(c => c.game))];
+
+let ggActiveGame = null;
+
+function ggInit() {
+  // Build dropdown options
+  const selectEl = document.getElementById('ggGameSelect');
+  GG_GAMES.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    const codeCount = GG_DB.filter(c => c.game === name).length;
+    const platform = GG_DB.find(c => c.game === name)?.platform || '';
+    opt.textContent = `${name} (${platform} · ${codeCount} codes)`;
+    selectEl.appendChild(opt);
+  });
+  // Default: show Contra Hard Corps
+  selectEl.value = 'Contra Hard Corps';
+  ggSelectFromDropdown('Contra Hard Corps');
+}
+
+function ggSelectFromDropdown(name) {
+  ggActiveGame = name;
+  ggRender(GG_DB.filter(c => c.game === name));
+}
+
+// Called when a ROM is loaded — auto-selects matching game in dropdown
+function ggAutoSelectForGame(romTitle) {
+  const clean = cleanRomName(romTitle).toLowerCase();
+  const match = GG_GAMES.find(g => clean.includes(g.toLowerCase()));
+  if (match) {
+    const selectEl = document.getElementById('ggGameSelect');
+    selectEl.value = match;
+    ggSelectFromDropdown(match);
+  }
+}
+
+function ggRender(codes) {
+  const el = document.getElementById('ggResults');
+  const count = document.getElementById('ggCount');
+  if (!codes.length) {
+    el.innerHTML = '<div class="gg-no-results">🔍 No verified codes found in local DB.<br>Use the live source links below to search online.</div>';
+    count.textContent = '';
+    return;
+  }
+  count.textContent = `(${codes.length})`;
+  el.innerHTML = codes.map((c, i) => `
+    <div class="gg-entry" onclick="ggCopy(this, '${c.code}')" title="Click to copy ${c.code}">
+      <div class="gg-code-box">${c.code}</div>
+      <div class="gg-info">
+        <div class="gg-effect" style="white-space: normal !important; overflow: visible !important;">${c.effect}</div>
+        <div class="gg-meta">
+          <span class="gg-badge ${c.cat}">${c.cat.toUpperCase()}</span>
+          <span class="gg-src">${c.region} · ${c.src.split('+')[0].trim()}</span>
+        </div>
+      </div>
+      <div class="gg-copy-flash">✓ Copied!</div>
+    </div>
+  `).join('');
+}
+
+function ggCopy(el, code) {
+  navigator.clipboard.writeText(code).catch(() => {});
+  const flash = el.querySelector('.gg-copy-flash');
+  flash.classList.add('show');
+  setTimeout(() => flash.classList.remove('show'), 900);
+}
+
+function cleanRomName(name) {
+  return name
+    .replace(/\.[a-z0-9]+$/i, '') // remove extension
+    .replace(/\(.*?\)/g, '')      // remove (USA), etc.
+    .replace(/\[.*?\]/g, '')      // remove [!]
+    .replace(/-/g, ' ')           // replace hyphens
+    .replace(/\s+/g, ' ')         // collapse spaces
+    .trim();
+}
+
+// ggUpdateSrcLinks removed — right panel now uses dropdown only
+
+function generateCheatFileUrl(title) {
+  if (!title) return null;
+  // Find all cheat codes matching the game title
+  const hits = GG_DB.filter(c => {
+    const tLower = title.toLowerCase();
+    const gLower = c.game.toLowerCase();
+    
+    // Prevent Spy Hunter codes from loading on Super Spy Hunter (unstable/crashing addresses)
+    if (gLower === 'spy hunter' && tLower.includes('super spy hunter')) {
+      return false;
+    }
+    return tLower.includes(gLower);
+  });
+  if (hits.length === 0) return null;
+  
+  // Build a standard libretro .cht file
+  let chtContent = `cheats = ${hits.length}\n`;
+  hits.forEach((c, i) => {
+    chtContent += `cheat${i}_desc = "${c.effect} [${c.cat.toUpperCase()}]"\n`;
+    chtContent += `cheat${i}_code = "${c.code}"\n`;
+    chtContent += `cheat${i}_enable = false\n`;
+  });
+
+  const blob = new Blob([chtContent], { type: 'text/plain' });
+  return URL.createObjectURL(blob);
+}
+
+// Init GG and Auto-Resume on page load
+let arcadeConfig = null;
+
+async function initArcadeSync() {
+  try {
+    const res = await fetch('/api/arcade/config');
+    if (res.ok) {
+      arcadeConfig = await res.json();
+      if (arcadeConfig.romFolder) {
+        document.getElementById('configRomPath').value = arcadeConfig.romFolder;
+        refreshLocalRoms();
+      }
+      if (arcadeConfig.saveFolder) {
+        document.getElementById('configSavePath').value = arcadeConfig.saveFolder;
+      }
+    }
+  } catch (e) {
+    console.log("No backend config found.");
+  }
+}
+
+async function refreshLocalRoms() {
+  const container = document.getElementById('localRomList');
+  try {
+    container.innerHTML = '<div class="helper-card">Scanning vault...</div>';
+    const res = await fetch('/api/arcade/roms');
+    if (!res.ok) throw new Error("API error");
+    const data = await res.json();
+    if (data.roms && data.roms.length > 0) {
+      // Map core to icon helper
+      const getCoreIcon = (core) => {
+        switch (core) {
+          case 'nes': return '🍄';
+          case 'snes': return '🌟';
+          case 'segaMD': return '🦔';
+          case 'gba': return '🕹️';
+          case 'gbc': return '👾';
+          case 'gb': return '📟';
+          case 'n64': return '🧊';
+          case 'nds': return '📱';
+          default: return '🎮';
+        }
+      };
+
+      const cardsHtml = data.roms.map(rom => {
+        const core = detectCoreByExtension(rom) || 'nes'; // fallback
+        const url = `/api/arcade/raw/${encodeURIComponent(rom)}`;
+        const escapedUrl = url.replace(/'/g, "\\'");
+        const escapedRom = rom.replace(/'/g, "\\'");
+        const cleanName = cleanRomName(rom);
+        const icon = getCoreIcon(core);
+        
+        return `
+          <div class="cartridge-card" data-system="${core}" onclick="quickLoadDemo('${core}', '${escapedUrl}', '${escapedRom}')" title="${rom}">
+            <div class="cartridge-label">
+              <span class="cartridge-icon">${icon}</span>
+              <span class="cartridge-sys-badge">${core.toUpperCase()}</span>
+            </div>
+            <div class="cartridge-title">${cleanName}</div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = `<div class="rom-grid">${cardsHtml}</div>`;
+    } else {
+      container.innerHTML = '<div class="helper-card">No ROMs found in configured folder.</div>';
+    }
+  } catch (e) {
+    container.innerHTML = `<div class="helper-card" style="color:var(--error);">Error reading vault: ${e.message}</div>`;
+  }
+}
+
+function toggleConfigModal() {
+  const m = document.getElementById('configModal');
+  m.style.display = m.style.display === 'none' ? 'flex' : 'none';
+}
+
+async function saveArcadeConfig() {
+  const romFolder = document.getElementById('configRomPath').value.trim();
+  const saveFolder = document.getElementById('configSavePath').value.trim();
+  try {
+    const res = await fetch('/api/arcade/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ romFolder, saveFolder })
+    });
+    if (res.ok) {
+      arcadeConfig = { romFolder, saveFolder };
+      toggleConfigModal();
+      refreshLocalRoms();
+    }
+  } catch (e) {
+    alert("Error saving config.");
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  ggInit();
+  // Log landing page visit
+  fetch('/api/arcade/visit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ game: 'Arcade Landing' })
+  }).catch(e => console.warn('Failed to log page visit:', e));
+
+  await initArcadeSync();
+  await initDB();
+  await syncUnloadSaveToDB();
+  await loadLastGameFromDB();
+});
+
+function toggleCRT() {
+  isCrtEnabled = !isCrtEnabled;
+  const overlay = document.getElementById('crtOverlay');
+  const btn = document.getElementById('toggleCrtBtn');
+  
+  if (isCrtEnabled) {
+    overlay.style.opacity = '0.8';
+    btn.textContent = '📺 Scanlines: ON';
+  } else {
+    overlay.style.opacity = '0';
+    btn.textContent = '📺 Scanlines: OFF';
+  }
+}
+
+function toggleFullscreen() {
+  const container = document.getElementById('game-container');
+  if (!document.fullscreenElement) {
+    if (container.requestFullscreen) {
+      container.requestFullscreen();
+    } else if (container.webkitRequestFullscreen) { /* Safari */
+      container.webkitRequestFullscreen();
+    } else if (container.msRequestFullscreen) { /* IE11 */
+      container.msRequestFullscreen();
+    }
+  } else {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) { /* Safari */
+      document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) { /* IE11 */
+      document.msExitFullscreen();
+    }
+  }
+}
+
+// Gamepad Touch Logic
+function triggerKey(key, type) {
+  const frame = document.getElementById('emulatorFrame');
+  if (frame && frame.contentWindow) {
+    const keyCodeValue = key === 'Enter' ? 13 : key === 'Shift' ? 16 : key === 'ArrowUp' ? 38 : key === 'ArrowDown' ? 40 : key === 'ArrowLeft' ? 37 : key === 'ArrowRight' ? 39 : key === 'z' ? 90 : key === 'x' ? 88 : key === 'a' ? 65 : key === 's' ? 83 : 0;
+    
+    const eventDict = {
+      key: key,
+      code: key === 'Enter' ? 'Enter' : key === 'Shift' ? 'ShiftLeft' : key.startsWith('Arrow') ? key : 'Key' + key.toUpperCase(),
+      keyCode: keyCodeValue,
+      which: keyCodeValue,
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      view: frame.contentWindow
+    };
+    
+    // Dispatch to document, window, and canvas to ensure Emscripten catches it
+    const doc = frame.contentWindow.document;
+    const canvas = doc.querySelector('canvas');
+    const win = frame.contentWindow;
+    
+    doc.dispatchEvent(new KeyboardEvent(type, eventDict));
+    win.dispatchEvent(new KeyboardEvent(type, eventDict));
+    if (canvas) canvas.dispatchEvent(new KeyboardEvent(type, eventDict));
+  }
+}
+
+document.querySelectorAll('.gamepad-btn, .pill-btn').forEach(btn => {
+  btn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    btn.classList.add('active');
+    triggerKey(btn.dataset.key, 'keydown');
+  });
+  btn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    btn.classList.remove('active');
+    triggerKey(btn.dataset.key, 'keyup');
+  });
+  btn.addEventListener('touchcancel', (e) => {
+    e.preventDefault();
+    btn.classList.remove('active');
+    triggerKey(btn.dataset.key, 'keyup');
+  });
+});
+
+// Show gamepad on mobile
+function checkGamepadVisibility() {
+  const gamepad = document.getElementById('mobile-gamepad');
+  if (window.innerWidth <= 1024) {
+    gamepad.style.display = 'flex';
+  } else {
+    gamepad.style.display = 'none';
+  }
+}
+window.addEventListener('resize', checkGamepadVisibility);
+checkGamepadVisibility();
+
+</script>
+
+</body>
+
+<!-- CONFIG MODAL -->
+<div id="configModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
+  <div style="background:var(--card-bg); border:1px solid var(--border); padding:20px; border-radius:12px; width:450px; max-width:90%; color:var(--text);">
+    <h3 style="margin-top:0; color:var(--primary); font-family:'Orbitron', sans-serif;">⚙️ Arcade Sync Config</h3>
+    <p style="font-size:12px; opacity:0.8;">Bypass browser sandboxing. Sync directly with local Windows folders via the Nexus Server.</p>
+    
+    <label style="display:block; margin-top:15px; font-size:12px; color:var(--text-dim);">Local ROMs Folder Path</label>
+    <input type="text" id="configRomPath" class="input-field" placeholder="C:\Users\aruna\Documents\Arunaabh\emulator games\ROM" style="width:100%; margin-top:5px; box-sizing:border-box;">
+    
+    <label style="display:block; margin-top:15px; font-size:12px; color:var(--text-dim);">Save States Folder Path</label>
+    <input type="text" id="configSavePath" class="input-field" placeholder="C:\Users\aruna\Documents\Arunaabh\emulator games\Saved game" style="width:100%; margin-top:5px; box-sizing:border-box;">
+    
+    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+      <button class="btn btn-secondary" onclick="toggleConfigModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveArcadeConfig()">Save Settings</button>
+    </div>
+  </div>
+</div>
+</html>
+</html>

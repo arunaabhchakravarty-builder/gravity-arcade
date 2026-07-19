@@ -1,0 +1,11 @@
+{
+  "apiVersion": "domains.cloudrun.com/v1",
+  "kind": "DomainMapping",
+  "metadata": {
+    "name": "retrogames.scriptworkspace.com",
+    "namespace": "362525117221"
+  },
+  "spec": {
+    "routeName": "retrogames"
+  }
+}

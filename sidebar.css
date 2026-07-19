@@ -1,0 +1,253 @@
+/* =========================================================================
+   GLOBAL SIDEBAR & NAVIGATION STYLES (Gravity OS Brand system)
+   ========================================================================= */
+.sidebar { 
+  width: 240px; 
+  background: var(--sidebar-bg); 
+  border-right: 1px solid var(--border); 
+  display: flex; 
+  flex-direction: column; 
+  padding: 24px 20px; 
+  transition: all 0.3s; 
+  z-index: 10; 
+  flex-shrink: 0; 
+  box-shadow: var(--shadow-sm, 4px 0 24px rgba(0,0,0,0.02)); 
+}
+
+/* BRAND LOGO LAYOUT */
+.brand { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 16px; 
+  padding: 4px 8px; 
+  margin-bottom: 24px; 
+}
+
+.brand-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+/* Sleek rotating cybernetic logo */
+.brand-logo-container {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.brand-logo-ring1 {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  border: 2px solid var(--primary, #00ffff);
+  animation: logo-spin 8s linear infinite;
+}
+
+.brand-logo-ring2 {
+  position: absolute;
+  inset: 3px;
+  border-radius: 6px;
+  border: 1px solid var(--secondary, #ff00ff);
+  animation: logo-spin-reverse 4s linear infinite;
+}
+
+.brand-logo-char {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  font-size: 12px;
+  color: var(--text-main, #ffffff);
+  text-shadow: 0 0 8px var(--primary-light, rgba(0, 255, 255, 0.5));
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-name { 
+  font-size: 14px; 
+  font-weight: 900; 
+  font-family: 'Orbitron', sans-serif; 
+  letter-spacing: 1px; 
+  color: var(--text-main, #ffffff); 
+  line-height: 1.2;
+}
+
+.brand-sub { 
+  font-size: 9px; 
+  font-weight: 800; 
+  color: var(--text-muted, rgba(255, 255, 255, 0.45)); 
+  text-transform: uppercase; 
+  letter-spacing: 1px; 
+  margin-top: 2px;
+}
+
+/* PREMIUM THEMED SELECT DROP-DOWN */
+.sidebar-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.sidebar-select {
+  width: 100%;
+  background: var(--card-bg, #0a0d16);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  color: var(--text-main, #ffffff);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 10px 32px 10px 14px;
+  border-radius: 12px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.sidebar-select:hover {
+  border-color: var(--primary, rgba(0, 255, 255, 0.4));
+  box-shadow: var(--shadow-sm, 0 0 15px rgba(0, 255, 255, 0.15));
+}
+
+.sidebar-select:focus {
+  border-color: var(--primary, rgba(0, 255, 255, 0.6));
+  box-shadow: var(--shadow-md, 0 0 15px rgba(0, 255, 255, 0.2));
+}
+
+.sidebar-select-arrow {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--primary, #00ffff);
+  width: 10px;
+  height: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-select-arrow svg {
+  width: 10px;
+  height: 10px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+}
+
+/* NAVIGATION LINKS */
+.nav-links { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 8px; 
+  flex: 1; 
+}
+
+.nav-link { 
+  display: flex; 
+  align-items: center; 
+  gap: 14px; 
+  padding: 10px 16px; 
+  border-radius: 12px; 
+  color: var(--text-sub, rgba(255, 255, 255, 0.6)); 
+  text-decoration: none; 
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px; 
+  font-weight: 700; 
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+  min-height: 44px; 
+}
+
+.nav-link:hover { 
+  background: var(--card-hover, rgba(255, 255, 255, 0.05)); 
+  color: var(--text-main, #ffffff); 
+  transform: translateX(4px); 
+}
+
+.nav-link.active { 
+  color: var(--primary, #00ffff) !important;
+  background: var(--primary-light, rgba(0, 255, 255, 0.08)) !important;
+  border-left: 2px solid var(--primary, #00ffff) !important;
+  box-shadow: var(--shadow-sm, 0 0 15px rgba(0, 255, 255, 0.1)) !important;
+  font-weight: 900;
+}
+
+.nav-icon { 
+  font-size: 18px; 
+  width: 22px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+}
+
+/* FOOTER */
+.sidebar-footer { 
+  padding-top: 16px; 
+  border-top: 1px solid var(--border); 
+}
+
+.host-pill { 
+  background: var(--card-hover, rgba(255, 255, 255, 0.05)); 
+  border: 1px solid var(--border); 
+  padding: 10px 14px; 
+  border-radius: 12px; 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  font-size: 12px; 
+  font-weight: 700; 
+  color: var(--text-sub); 
+  min-height: 44px; 
+}
+
+.host-dot { 
+  width: 10px; 
+  height: 10px; 
+  background: var(--success); 
+  border-radius: 50%; 
+  box-shadow: 0 0 14px var(--success); 
+}
+
+/* KEYFRAMES */
+@keyframes logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes logo-spin-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+/* NATIVE SCROLLBAR & SELECTION ACCENT CUSTOMIZATION */
+.sidebar, .dash-canvas {
+  scrollbar-color: var(--primary-light) transparent;
+  scrollbar-width: thin;
+  scroll-behavior: smooth;
+}
+
+.sidebar-select {
+  accent-color: var(--primary);
+}
+
+:root {
+  color-scheme: dark;
+}
+
+/* MOBILE RESPONSIVE SIDEBAR */
+@media (max-width: 768px) {
+  .app-layout { flex-direction: column; height: auto; min-height: 100vh; width: 100%; overflow: visible; }
+  .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); padding: 24px 20px; box-shadow: var(--shadow-md); }
+  .nav-links { flex-direction: row; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  .nav-link { padding: 10px 16px; font-size: 14px; flex: 1; min-width: 140px; justify-content: center; }
+}
